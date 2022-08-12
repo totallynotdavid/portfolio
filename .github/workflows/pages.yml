@@ -46,7 +46,7 @@ jobs:
       - name: Install packages
         run: npm install
       - name: TailwindCSS
-        run: npm run build:t
+        run: npx tailwindcss -i ./themes/tailwind/assets/main.css -o ./themes/tailwind/assets/style.css
       - name: Build with Hugo
         run: |
           hugo --gc --minify \
