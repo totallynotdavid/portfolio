@@ -3,6 +3,8 @@
   "version": "0.0.1",
   "description": "David's Personal website",
   "scripts": {
+    "build": "npm run build:t && exec-bin node_modules/.bin/hugo/hugo --gc --minify",
+    "build:t": "npx tailwindcss -i ./themes/tailwind/assets/main.css -o ./themes/tailwind/assets/style.css --watch",
     "build:lan": "exec-bin node_modules/.bin/hugo/hugo server --bind=0.0.0.0 --baseURL=http://192.168.1.11 --port=1313",
     "clean": "shx rm -rf public resources",
     "clean:install": "shx rm -rf package-lock.json node_modules",
@@ -14,7 +16,8 @@
   "devDependencies": {
     "exec-bin": "^1.0.0",
     "hugo-installer": "^3.1.0",
-    "shx": "^0.3.4"
+    "shx": "^0.3.4",
+    "tailwindcss": "^3.1.8"
   },
   "otherDependencies": {
     "hugo": "0.96.0"
