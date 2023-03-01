@@ -15,7 +15,7 @@
   "license": "MIT",
   "devDependencies": {
     "exec-bin": "^1.0.0",
-    "hugo-installer": "^3.1.0",
+    "hugo-installer": "^4.0.1",
     "shx": "^0.3.4",
     "tailwindcss": "^3.2.7"
   },
