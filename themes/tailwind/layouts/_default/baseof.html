@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html class="bg-gray-50">
-    {{- partial "head.html" . -}}
-    <body class="h-full">
+<html>
+  {{- partial "head.html" . -}}
+  <body class="bg-gradient-to-br from-gray-900 to-black">
+      <div class="text-gray-300 container mx-auto p-8 overflow-hidden md:rounded-lg md:p-10 lg:p-24">
         {{- partial "header.html" . -}}
         <div id="content">
         {{- block "main" . }}{{- end }}
         </div>
         {{- partial "footer.html" . -}}
-    </body>
+      </div>
+  </body>
 </html>

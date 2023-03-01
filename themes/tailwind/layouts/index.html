@@ -1,50 +1,123 @@
-{{ define "main" }}
+{{ define "main" }} 
 
-<div class="container my-12 py-12 mx-auto px-4 md:px-6 lg:px-12">
-  
-  <section class="mb-20 text-gray-800">
-    <div class="block rounded-t-xl rounded-b-lg shadow-lg bg-white mb-6">
-      <div class="border-b text-center px-6 py-4 bg-gray-50 rounded-t-lg">
-        <h2 class="font-semibold text-2xl mb-4">{{ .Params.Title }}</h2>
+<div class="h-32 md:h-40"></div>
+
+<p class="font-sans text-4xl font-bold text-gray-200 max-w-5xl lg:text-7xl lg:pr-24 md:text-6xl">
+  {{ site.Params.description }}
+</p>
+<div class="h-10"></div>
+<p class="max-w-2xl font-serif text-xl text-gray-400 md:text-2xl">
+  {{ site.Params.small_description }}
+</p>
+<!--
+  The Universe is a Mystery and my code too...
+  anything is possible, except explaining the universe in Python
+  That's probably a bit too much... We should study this with one line of code at a time... and it crashed.
+-->
+
+<div class="h-32 md:h-40"></div>
+
+<div class="grid gap-8 md:grid-cols-2">
+  <div class="flex flex-col justify-center">
+    <p class="self-start inline font-sans text-xl font-medium text-transparent bg-clip-text bg-gradient-to-br from-green-400 to-green-600">
+      Work
+    </p>
+    <h2 class="text-4xl font-bold">Research Projects</h2>
+    <div class="h-6"></div>
+    <p class="font-serif text-xl text-gray-400 md:pr-10">
+      As a third-year student, I am currently working on various projects. I'm mainly focused on Computational Physics and Fluid Dynamics.
+    </p>
+    <div class="h-8"></div>
+    <div class="grid grid-cols-2 gap-4 pt-8 border-t border-gray-800">
+      <div>
+        <p class="font-semibold text-gray-400">Lennard-Jones Potential</p>
+        <div class="h-4"></div>
+        <p class="font-serif text-gray-400">
+          Modelling molecular interactions using Lennard-Jones potential using computational methods.
+        </p>
       </div>
-      <div class="p-6">
-        <div class="flex flex-col">
-          <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div class="py-2 inline-block min-w-full sm:px-6 lg:px-8">
-              <div class="overflow-hidden">
-                <table class="min-w-full">
-                  <thead class="bg-white border-b">
-                    <tr>
-                      <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left"></th>
-                      <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">Name</th>
-                      <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">URL</th>
-                      <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">Start Date</th>
-                      <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">Finish Date</th>
-                      <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">Tools</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {{ range .Params.rows }}
-                    <tr class="bg-white border-b transition duration-300 ease-in-out hover:bg-gray-100">
-                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ .ID }}</td>
-                      <td class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{{ .Name }}</td>
-                      <td class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{{ .URL }}</td>
-                      <td class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{{ .StartDate }}</td>
-                      <td class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{{ .FinishDate }}</td>
-                      <td class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{{ .Tools }}</td>
-                    </tr>
-                    {{ end }}
-                  </tbody>
-                </table>
-              </div>
-                
-            </div>
-          </div>
-        </div>
+      <div>
+        <p class="font-semibold text-gray-400">Fluid Dynamics (👷)</p>
+        <div class="h-4"></div>
+        <p class="font-serif text-gray-400">
+          Behaviour of fluids in complex geometries using computational methods.
+        </p>
       </div>
     </div>
-  </section>
-
+  </div>
+  <div>
+    <div class="-mr-24 rounded-lg md:rounded-l-full bg-gradient-to-br from-gray-900 to-black h-96"></div>
+  </div>
 </div>
-    
+
+<div class="h-32 md:h-40"></div>
+
+<p class="font-serif text-4xl">
+  <span class="text-gray-400">The Universe is a mistery</span>
+  <span class="text-gray-600">and my code is <span class="relative before:z-10 before:absolute before:-right-3 before:top-1/2 before:w-max before:max-w-xs before:translate-x-full before:-translate-y-1/2 before:rounded-md before:bg-gray-700 before:px-3 before:py-2 before:text-white before:invisible before:content-[attr(data-tip)] after:z-10 after:absolute after:-right-[0.8rem] after:top-1/2 after:h-0 after:w-0 after:translate-x-0 after:-translate-y-1/2 after:border-8 after:border-r-gray-700 after:border-l-transparent after:border-b-transparent after:border-t-transparent after:invisible hover:before:visible hover:after:visible" data-tip="😭">too</span> (sometimes) but I enjoy unraveling them both.</span>
+</p>
+
+<div class="h-32 md:h-40"></div>
+
+<div class="grid gap-4 md:grid-cols-3">
+  <div class="flex-col p-8 py-16 rounded-lg shadow-2xl md:p-12 bg-gradient-to-br from-gray-900 to-black">
+    <p class="flex items-center justify-center text-4xl font-semibold text-green-400 bg-green-800 rounded-full shadow-lg w-14 h-14">
+      1
+    </p>
+    <div class="h-6"></div>
+    <p class="font-serif text-3xl">Establish your Research goals.</p>
+  </div>
+  <div class="flex-col p-8 py-16 rounded-lg shadow-2xl md:p-12 bg-gradient-to-b from-gray-900 to-black">
+    <p class="flex items-center justify-center text-4xl font-semibold text-indigo-400 bg-indigo-800 rounded-full shadow-lg w-14 h-14">
+      2
+    </p>
+    <div class="h-6"></div>
+    <p class="font-serif text-3xl">
+      Read, read and read. Collect data.
+    </p>
+  </div>
+  <div class="flex-col p-8 py-16 rounded-lg shadow-2xl md:p-12 bg-gradient-to-bl from-gray-900 to-black">
+    <p class="flex items-center justify-center text-4xl font-semibold text-teal-400 bg-teal-800 rounded-full shadow-lg w-14 h-14">
+      3
+    </p>
+    <div class="h-6"></div>
+    <p class="font-serif text-3xl">Present your results.</p>
+  </div>
+</div>
+
+<div class="h-40"></div>
+
+<div class="grid gap-8 md:grid-cols-3">
+  <div class="flex flex-col justify-center md:col-span-2">
+    <p class="self-start inline font-sans text-xl font-medium text-transparent bg-clip-text bg-gradient-to-br from-teal-400 to-teal-600">
+      I'm also human
+    </p>
+    <h2 class="text-4xl font-bold">Passionate projects</h2>
+    <div class="h-6"></div>
+    <p class="font-serif text-xl text-gray-400 md:pr-10">
+      Lorem ipsum dolor, sit amet consectetur adipisicing elit. Magnam
+      autem, a recusandae vero praesentium qui impedit doloremque
+      molestias.
+    </p>
+    <div class="h-8"></div>
+    <div class="grid gap-6 pt-8 border-t border-gray-800 lg:grid-cols-3">
+      {{ range .Params.rows }}
+      <div>
+        <p class="font-semibold text-gray-400"><a href="{{ .URL }}">{{ .Name }}</a></p>
+        <div class="h-4"></div>
+        <p class="font-serif text-gray-400">
+          {{ .StartDate }} - {{ .FinishDate }}<br>
+          <em>{{ .Tools }}</em>
+        </p>
+      </div>
+      {{ end }}
+    </div>
+  </div>
+  <div>
+    <div class="-mr-24 rounded-lg md:rounded-l-full bg-gradient-to-br from-gray-900 to-black h-96"></div>
+  </div>
+</div>
+
+<div class="h-10 md:h-40"></div>
+
 {{ end }}
