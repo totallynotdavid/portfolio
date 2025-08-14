@@ -1,10 +1,17 @@
-# David's Portfolio
+# David's Portfolio [![Deploy to GitHub Pages](https://github.com/totallynotdavid/totallynotdavid.github.io/actions/workflows/deploy.yml/badge.svg)](https://github.com/totallynotdavid/totallynotdavid.github.io/actions/workflows/deploy.yml)
 
-Welcome to the repository of my portfolio website! This website is dedicated to showcasing
-my work as an Undergraduate Physics student with a focus on Computational Physics and
-Fluid Dynamics.
+This repo contains the source code for my personal website built using Astro + MDX +
+Tailwind.
 
-## Contact
+## Running Locally
 
-If you have any questions or would like to get in touch with me, please don't hesitate to
-send me an email at david [at] caefisica.com
+Install deps and start the dev server:
+
+```
+bun install
+bun dev
+```
+
+––-
+
+If something here helps you, feel free to reach out or open an issue.
