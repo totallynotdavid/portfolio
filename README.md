@@ -28,7 +28,7 @@ bun dev
 
 The site will be available at `http://localhost:4321`.
 
-## Custom MDX Components
+## Custom MDX components
 
 This site uses custom interactive components within MDX content. Here's how to use each
 one:
