@@ -1,0 +1,50 @@
+name: Build on PR
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-build-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build-check:
+    name: Validate Astro project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.19
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun x prettier --check .
+
+      - run: bun astro check
+
+      - run: bun run build
+
+      - name: Verify dist produced
+        run: |
+          test -d dist || { echo 'dist/ not found'; exit 1; }
+          echo "dist size:" $(du -sh dist | cut -f1)
+
+      - name: Ensure no unintended file changes
+        run: |
+          git diff --name-only --exit-code || {
+            echo 'The build or checks modified tracked files. Please commit those changes.';
+            git diff --stat; exit 1; }
+
+      # Optional: Upload build artifact for manual inspection (commented out to save minutes)
+      # - name: Upload build artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: dist
+      #     path: dist
+      #     retention-days: 7
