@@ -1,0 +1,205 @@
+---
+title: 'Por qué creamos caefisica.com'
+pubDate: 2023-12-14
+description:
+  'Por qué estamos construyendo una web para estudiantes de física, y en qué esperamos que
+  se convierta.'
+draft: false
+keywords: ['hugo']
+---
+
+import Annotation from '@/components/mdx/Annotation.astro';
+import Callout from '@/components/mdx/Callout.astro';
+import Mark from '@/components/mdx/Mark.astro';
+import MediaEmbed from '@/components/mdx/MediaEmbed.astro';
+import pics from '@/assets/pics.jpeg';
+
+Estudio física y construyo cosas. La idea de [caefisica.com](https://caefisica.com) no
+surgió del deseo de tener otro proyecto más, sino de un problema recurrente que tenía y
+que pensé que otros estudiantes también enfrentaban.
+
+La parte más difícil de una asignatura a menudo no era el material en sí mismo. Era
+encontrar los recursos adecuados: apuntes de clase, exámenes anteriores o recomendaciones
+de libros que pudieran marcar la diferencia. Podías pasar días estudiando con un libro que
+cubría tu tema pero profundizaba en temas irrelevantes para tu clase particular[^1], así
+que terminabas pasando al siguiente libro, y al siguiente, y al siguiente, perdiendo
+tiempo que podrías haber usado productivamente.
+
+<Mark>Necesitas estudiar de forma autodidacta y eficaz</Mark> para tener éxito en esta
+carrera. El profesorado tiene problemas con la puntualidad, motivación y compromiso, en
+parte debido a las diferencias generacionales, ya que pocos profesores jóvenes enseñan
+aquí. La calidad de la enseñanza varía enormemente. Solo te das cuenta de esto después de
+matricularte en los cursos, por lo que debes adaptarte identificando los temas importantes
+y practicando la resolución de problemas lo antes posible. A veces los profesores
+comparten sus libros de texto, pero a menudo tienes que arreglártelas solo.
+
+Entonces... ¿cómo resolvemos esto? La solución parecía simple: después de terminar un
+curso, ¿por qué no hacer que los estudiantes que aprobaron compartan sus materiales de
+estudio? Sus apuntes, canales útiles de YouTube, libros y recomendaciones. Ya han pasado
+por este proceso y saben qué funciona y qué no.
+
+# El problema del conocimiento encapsulado
+
+En nuestra escuela, la Escuela de Física, tenemos un problema de fragmentación del
+conocimiento. Cada promoción que se gradúa, o _base_[^2], tiene (a veces) su propia
+colección de recursos. Los profesores comparten materiales con sus clases —problemas
+resueltos, apuntes teóricos, formularios— pero una vez que termina el semestre, ese
+material generalmente se desvanece en el olvido, olvidado por quienes aprobaron.
+
+Los estudiantes de una promoción rara vez comparten apuntes o exámenes con estudiantes más
+nuevos, lo cual es comprensible ya que no es su responsabilidad y puede que no conozcan a
+personas de otras promociones.
+
+<Annotation>
+  Los estudiantes nuevos quedan excluidos. No pueden acceder a años de conocimiento
+  acumulado que podría ayudarles a prepararse. Esto afecta particularmente a los
+  estudiantes de primer año que no han establecido conexiones con estudiantes de cursos
+  superiores que podrían decirles qué profesores evitar o cómo abordar cursos específicos.
+  <Fragment
+    slot='comment'
+    set:text='Las relaciones entre estudiantes de cursos superiores e inferiores pueden ser problemáticas'
+  />
+</Annotation>
+
+A veces una promoción crea su propio repositorio, como una carpeta compartida de Google
+Drive. Esto ocurrió con la promoción de 2019, pero el material solo abarcaba unos 2 o 3
+semestres y era muy limitado. La promoción de 2019 creó uno que abarcaba 2-3 semestres con
+material limitado. La <Mark>promoción de 2020</Mark>, inicialmente liderada por Nelson
+Noa, quien era delegado de clase en ese momento, construyó un repositorio integral que
+cubría los seis semestres con materiales de muchos cursos. Pero esto fue un esfuerzo
+puntual que no se mantuvo después de la graduación[^3]. La promoción de 2021 no logró
+crear nada similar.
+
+---
+
+Sabremos que hemos tenido éxito cuando hayamos construido un lugar donde cualquier
+estudiante, de cualquier año, pueda encontrar fácilmente lo que necesita, incluso para
+cursos avanzados de las áreas A, B o C.[^4]
+
+# Lo que queremos lograr
+
+<MediaEmbed
+  src={pics}
+  alt='Imagen principal mostrando las características del producto'
+  aspectRatio='square'
+  caption='Parque frente al Comedor Universitario de la UNMSM'
+/>
+
+Nuestro objetivo es sencillo: queremos que todos los estudiantes de física tengan las
+mismas oportunidades de éxito. Cuando decimos "oportunidades", nos referimos a que todos
+deberían conocer las mismas becas, tener fácil acceso a los mismos libros y escuchar las
+mismas recomendaciones. Eso es todo.
+
+Nuestra misión es mantener la información fluyendo para el beneficio de todos los
+estudiantes.
+
+# Nuestro plan de acción
+
+Estamos abordando esto por fases.
+
+Primero, construimos las bases. Establecimos canales de redes sociales y un grupo público
+de WhatsApp para empezar a compartir oportunidades de inmediato. Luego prototipamos y
+lanzamos la primera versión de [caefisica.com](https://caefisica.com), enfocada en el
+currículo 2018 en menos de un año.
+
+El sitio web está construido con <Mark color="rgba(245, 40, 145, 0.8)">Hugo</Mark>, un
+generador de sitios estáticos, lo que lo hace increíblemente rápido. Lo combinamos con
+
+<Mark>Bootstrap</Mark> para el diseño y un CMS sin interfaz para gestionar el contenido.
+Incluso configuramos una GitHub Action que verifica automáticamente los enlaces rotos,
+manteniendo la confiabilidad de los recursos. Todo este proceso ocurrió abiertamente entre
+principios de 2022 y 2023. Puedes ver y construir todo el proyecto desde GitHub en
+[caefisica/web-main](https://github.com/caefisica/web-main).
+
+<Callout href='https://caefisica.com'>
+  <p>
+    Échanos un vistazo. <span class='pl-1 text-gray-500'>Visita caefisica.com</span>
+  </p>
+</Callout>
+
+<Annotation>
+  En este momento, estamos trabajando en conseguir más contenido. Estamos tratando de
+  obtener ayuda de los profesores para revisar lo que escribimos y dar críticas a las
+  guías, y estamos transcribiendo apuntes escritos a mano a LaTeX para mejorar la búsqueda
+  y usabilidad.
+  <Fragment
+    slot='comment'
+    set:text='Los documentos escaneados o copias manuscritas dificultan las búsquedas'
+  />
+</Annotation>
+
+Puedes ver este trabajo en el repositorio
+[caefisica/NotasTeX](https://github.com/caefisica/NotasTeX). También estamos construyendo
+una herramienta de extracción automática para compartir becas y eventos en todos nuestros
+grupos de WhatsApp y el sitio web, eliminando la publicación manual.[^5]
+
+A continuación, queremos expandirnos. También estamos trabajando en un feed de noticias
+que extrae automáticamente artículos relacionados con la física. El repositorio está en
+[caefisica/news-reader](https://github.com/caefisica/news-reader), con mejoras en la
+extracción de datos en
+[caefisica/news-scraper](https://github.com/caefisica/news-scraper). También estamos
+buscando formas de mejorar la búsqueda del sitio y automatizar las publicaciones en redes
+sociales.
+
+Muchas ideas, un solo mantenedor. Pero con más personas involucradas, creo que podemos
+hacer que esto funcione.
+
+# Cómo sabremos si esto está funcionando
+
+El éxito para nosotros no se trata de números de tráfico, ya que **los estudiantes de
+pregrado en física** ya son un grupo de nicho, y 800 visitas al mes ya es bastante.
+
+Tendremos éxito si:
+
+- Estudiantes de diferentes promociones contribuyen con nuevo contenido
+- Más estudiantes se postulan para intercambios y posgrados usando información que
+  proporcionamos
+- Se forman nuevos grupos de estudiantes alrededor de áreas específicas de la física
+- La gente realmente nos da comentarios sobre el sitio y sugiere nuevas ideas
+
+Y fallaremos si:
+
+- Nadie usa nuestros canales
+- La participación en programas de intercambio permanece sin cambios
+- El sitio web se vuelve obsoleto y desactualizado
+- Terminamos construyendo esto en una burbuja, sin hablar con otros estudiantes
+
+@caefisica intenta construir algo útil para la comunidad. He aprendido de los videos y
+código de otros y me he beneficiado de las herramientas que construyeron, así que quiero
+contribuir de vuelta. Si alguien más puede evitar los mismos obstáculos que enfrenté, eso
+es una victoria.
+
+<footer class='not-prose text-text-secondary mt-16 flex flex-col gap-1 pt-8 text-xs font-[460] opacity-70'>
+  <h1>Agradecimientos</h1>
+  <p>
+    No fundé @caefisica—fue fundado por un grupo de la promoción de 2016, particularmente
+    Renzo Franco, con quien tuve el placer de interactuar y escuchar sus recomendaciones
+    (y quejas sobre la facultad).
+  </p>
+  <p>
+    Gracias a todo el equipo de @caefisica (tanto contribuidores pasados como presentes)
+    por dar vida al sitio.
+  </p>
+  <p>
+    Gracias a Sergio Cordero, Richard Avalos y Liuba Ramos por sus contribuciones al
+    proyecto.
+  </p>
+</footer>
+
+[^1]:
+    No estoy diciendo que deberías estudiar solo para tu examen. Pero es tranquilizador
+    saber que estás preparado para el próximo examen y puedes enfocarte más en la clase
+    misma. ¿No te pasa que aprendes mejor un curso cuando no tienes que preocuparte por el
+    examen?
+
+[^2]:
+    Sí, así es como lo llamamos, _base_. Esto parece único de la UNMSM. No es un término
+    que se use en otras universidades, ni siquiera en la región de Lima, hasta donde sé.
+
+[^3]: Se esperaba que la promoción de 2020 se graduara en diciembre de 2024.
+
+[^4]:
+    El Área A cubre materiales y física del estado sólido, el Área B se enfoca en física
+    teórica y nuclear, y el Área C cubre astronomía y geofísica.
+
+[^5]: Es una pesadilla tener que usar constantemente Facebook.

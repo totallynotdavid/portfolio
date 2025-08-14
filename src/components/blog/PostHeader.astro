@@ -1,0 +1,58 @@
+---
+interface Props {
+  title: string;
+  pubDate?: string | Date;
+  class?: string;
+  prefix?: string;
+  monthFirst?: boolean;
+  showLastModified?: boolean;
+  filePath?: string;
+}
+
+const {
+  title,
+  pubDate,
+  class: extra,
+  prefix,
+  monthFirst,
+  showLastModified = false
+} = Astro.props as Props;
+
+const getBuildTime = (): Date => {
+  return new Date();
+};
+
+const buildTime = showLastModified ? getBuildTime() : undefined;
+const fallbackDate = showLastModified ? buildTime : undefined;
+const dateToDisplay = pubDate
+  ? pubDate instanceof Date
+    ? pubDate
+    : new Date(pubDate)
+  : buildTime || fallbackDate;
+
+function formatDate(d: Date, monthFirst?: boolean): string {
+  try {
+    const day = d.getDate();
+    const month = d.toLocaleString('en-US', { month: 'long' });
+    const year = d.getFullYear();
+    return monthFirst ? `${month} ${day}, ${year}` : `${day} ${month}, ${year}`;
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return d.toISOString().split('T')[0];
+  }
+}
+
+const displayPrefix = prefix || (showLastModified ? 'Updated' : undefined);
+---
+
+{
+  dateToDisplay && (
+    <header class={`mb-1 flex flex-col gap-1 ${extra ?? ''}`.trim()}>
+      <h1 class='font-medium'>{title}</h1>
+      <time datetime={dateToDisplay.toISOString()}>
+        {displayPrefix ? `${displayPrefix} ` : ''}
+        {formatDate(dateToDisplay, monthFirst)}
+      </time>
+    </header>
+  )
+}

@@ -1,0 +1,64 @@
+---
+interface Props {
+  color?: string;
+  as?: keyof HTMLElementTagNameMap;
+}
+const { color = 'var(--color-mark-bg)', as = 'mark' } = Astro.props as Props;
+const Tag = as as any;
+---
+
+<Tag data-marker={true} style={`--mark-color: ${color}`} class='mark-highlight'>
+  <slot />
+</Tag>
+<style>
+  .mark-highlight {
+    @apply inline;
+    margin: -0.107066em -0.437204em -0.192934em -0.0627957em;
+    padding: 0.107066em 0.437204em 0.192934em 0.0627957em;
+    border-radius: 0.5em 0.3em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    background-color: transparent;
+    background-image: linear-gradient(
+      87.97605373111685deg,
+      color-mix(in srgb, var(--mark-color), transparent 50%),
+      color-mix(in srgb, var(--mark-color), transparent 90%) 4%,
+      color-mix(in srgb, var(--mark-color), transparent 70%) 96%,
+      color-mix(in srgb, var(--mark-color), transparent 30%)
+    );
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .mark-highlight {
+      background-image: linear-gradient(
+        87deg,
+        color-mix(in srgb, var(--mark-color), white 12%) 0%,
+        color-mix(in srgb, var(--mark-color), white 18%) 15%,
+        color-mix(in srgb, var(--mark-color), white 8%) 35%,
+        color-mix(in srgb, var(--mark-color), white 20%) 60%,
+        color-mix(in srgb, var(--mark-color), white 15%) 85%,
+        color-mix(in srgb, var(--mark-color), white 10%) 100%
+      );
+      opacity: 0.8;
+      filter: brightness(1.1) saturate(1.05);
+    }
+  }
+
+  @supports not (background: color-mix(in srgb, red, transparent)) {
+    .mark-highlight {
+      background-image: linear-gradient(
+        88deg,
+        var(--mark-color) 0%,
+        var(--mark-color) 100%
+      );
+      opacity: 0.75;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .mark-highlight {
+        opacity: 0.6;
+        filter: brightness(1.3) saturate(1.4);
+      }
+    }
+  }
+</style>

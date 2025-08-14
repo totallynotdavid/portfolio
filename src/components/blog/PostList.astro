@@ -1,0 +1,87 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import { getLangFromUrl, useTranslations, parseLocalizedId } from '@/i18n/utils';
+import { i18nConfig } from '@/i18n/config';
+
+type Post = CollectionEntry<'posts'>;
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const locale = i18nConfig.languages[lang]?.locale || 'en-US';
+const isProd = import.meta.env.PROD;
+
+const postsByYear: Record<number, Post[]> = {};
+
+for (const p of await getCollection('posts')) {
+  const { lang: derivedLang, base } = parseLocalizedId(p.id);
+  if (derivedLang !== lang) continue;
+  if (isProd && p.data.draft) continue;
+
+  const post = {
+    ...p,
+    data: { ...p.data, lang: derivedLang, baseSlug: base }
+  } as Post;
+
+  const year = post.data.pubDate.getFullYear();
+  (postsByYear[year] ??= []).push(post);
+}
+
+const yearEntries = Object.entries(postsByYear)
+  .sort(([a], [b]) => Number(b) - Number(a))
+  .map(([year, posts]) => [
+    year,
+    posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  ]) as [string, Post[]][];
+
+function getPostUrl(post: Post): string {
+  const effectiveSlug = post.data.slugOverride || post.data.baseSlug;
+  const needsLangPrefix =
+    i18nConfig.showDefaultLang || post.data.lang !== i18nConfig.defaultLang;
+  const langPath = needsLangPrefix ? `/${post.data.lang}` : '';
+  return `${langPath}/${effectiveSlug}`;
+}
+---
+
+<section class='group flex flex-col gap-2 text-sm'>
+  {
+    yearEntries.map(([year, posts], index) => (
+      <>
+        {index > 0 && (
+          <hr class='dark:border-text-secondary/10 border-border-color border-t' />
+        )}
+        <div class='flex gap-8'>
+          <div class='text-text-secondary w-16 shrink-0 font-medium'>{year}</div>
+          <div class='flex flex-1 flex-col gap-2'>
+            {posts.map(post => (
+              <a
+                href={getPostUrl(post)}
+                class='post-item flex items-center justify-between gap-4 transition-colors group-hover:opacity-[0.45] hover:!opacity-100 focus:!opacity-100 motion-safe:transition-opacity'
+              >
+                <h2 class='text-text-primary font-[460] transition-colors'>
+                  {post.data.title}
+                  {post.data.draft && !isProd && (
+                    <span class='ml-2 rounded bg-yellow-200 px-1 py-0.5 text-xs text-yellow-800'>
+                      {t('posts.draft')}
+                    </span>
+                  )}
+                </h2>
+                <time
+                  datetime={post.data.pubDate.toISOString()}
+                  class='text-text-secondary flex shrink-0 items-center gap-0.5 tracking-[-0.06rem] tabular-nums opacity-80'
+                >
+                  <span>
+                    {post.data.pubDate.toLocaleDateString(locale, { day: '2-digit' })}
+                  </span>
+                  <span class='opacity-50'>/</span>
+                  <span>
+                    {post.data.pubDate.toLocaleDateString(locale, { month: '2-digit' })}
+                  </span>
+                </time>
+              </a>
+            ))}
+          </div>
+        </div>
+      </>
+    ))
+  }
+</section>

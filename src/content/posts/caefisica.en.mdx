@@ -1,0 +1,189 @@
+---
+title: 'Why we started caefisica.com'
+pubDate: 2023-12-14
+description:
+  "Why we're building a central hub for physics students at our university, and what we
+  hope it becomes."
+draft: false
+keywords: ['hugo']
+---
+
+import Annotation from '@/components/mdx/Annotation.astro';
+import Callout from '@/components/mdx/Callout.astro';
+import Mark from '@/components/mdx/Mark.astro';
+import MediaEmbed from '@/components/mdx/MediaEmbed.astro';
+import pics from '@/assets/pics.jpeg';
+
+I'm studying physics, and I build things. The idea for
+[caefisica.com](https://caefisica.com) didn't come from wanting another project, it came
+from a recurring problem that I had and thought other students faced too.
+
+The hardest part of a class often wasn't the material itself. It was finding the right
+resources: class notes, past exams, or book recommendations that could make a difference.
+You could spend days studying with a book that covered your topic but went deep into
+irrelevant topics for your particular class[^1], so you'd end up moving to the next book,
+and the next, and the next, wasting time you could have used productively.
+
+<Mark>You need to self-study effectively</Mark> to succeed in this career. The faculty
+struggles with punctuality, motivation and engagement—partly due to age gaps, since few
+young professors teach here. Teaching quality varies widely. You only discover this only
+after enrolling in courses, so you must adapt by identifying the important topics and
+practicing problem-solving as soon as possible. Sometimes professors share their
+textbooks, but often you have to figure it out alone.
+
+So... how do we solve this? The solution seemed simple: after finishing a course, why not
+have students who passed share their study materials? Their notes, helpful YouTube
+channels, books, and recommendations. They've already been through this process and know
+what works and what doesn't.
+
+# The problem of trapped knowledge
+
+At our school, the School of Physics, we have a knowledge fragmentation problem. Each
+graduating class, or _base_[^2], has (sometimes) its own collection of resources.
+Professors share materials with their classes—solved problems, theory notes, formula
+sheets—but once the semester ends, that material usually just fades out of existence,
+forgotten by those who passed.
+
+Students from one class rarely share notes or exams with newer students, which is
+understandable since it's not their responsibility and they may not know people from other
+classes.
+
+<Annotation>
+  New students are left out. They can't access years of accumulated knowledge that could
+  help them prepare. This particularly affects first-year students who haven't built
+  connections with upperclassmen who could tell them which professors to avoid or how to
+  approach specific courses.
+  <Fragment
+    slot='comment'
+    set:text='Relationships between upperclassmen and underclassmen can be problematic'
+  />
+</Annotation>
+
+Sometimes a class creates its own repository, like a shared Google Drive folder. This
+happened to the class of 2019 but the material only spanned about 2 or 3 semesters and was
+very limited. The class of 2019 created one that spanned 2-3 semesters with limited
+material. The <Mark>class of 2020</Mark>, initially led by Nelson Noa who was class
+delegate at the time, built a comprehensive repository covering all six semesters with
+materials from many courses. But this was a one-time effort that wasn't maintained after
+graduation[^3]. The class of 2021 didn't manage to create anything similar.
+
+---
+
+We'll know we're successful when we've built a place where any student, from any year, can
+easily find what they need, even for advanced courses from areas A, B, or C.[^4]
+
+# What we want to achieve
+
+<MediaEmbed
+  src={pics}
+  alt='Hero image showing product features'
+  aspectRatio='square'
+  caption='Park in front of the University Dining Hall of UNMSM'
+/>
+
+Our goal is straightforward: we want every physics student to have an equal shot at
+success. When we say "opportunities," we mean that everyone should know about the same
+scholarships, have easy access to the same books, and hear the same recommendations.
+That's it.
+
+Our mission is to keep information flowing for all students' benefit.
+
+# Our game plan
+
+We're tackling this in phases.
+
+First, we built the basics. We set up social media channels and a public WhatsApp group to
+start sharing opportunities right away. Then we prototyped and launched the first version
+of [caefisica.com](https://caefisica.com), focused on the 2018 curriculum in less than a
+year.
+
+The website is built with <Mark color="rgba(245, 40, 145, 0.8)">Hugo</Mark>, a static site
+generator, which makes it incredibly fast. We paired it with <Mark>Bootstrap</Mark> for
+the design and a headless CMS to manage content. We even set up a GitHub Action that
+automatically checks for broken links, maintaining resource reliability. This whole
+process happened openly between early 2022 and 2023. You can view and build the entire
+project from Github at [caefisica/web-main](https://github.com/caefisica/web-main).
+
+<Callout href='https://caefisica.com'>
+  <p>
+    Check us out. <span class='pl-1 text-gray-500'>Visit caefisica.com</span>
+  </p>
+</Callout>
+
+<Annotation>
+  Right now, we're working on getting more content. We're trying to get help from teachers
+  to review what we wrote and give criticisms to the guides, and we're transcribing
+  handwritten notes into LaTeX for better searchability and usability.
+  <Fragment
+    slot='comment'
+    set:text='Scanned documents or handwritten copies making searches difficult'
+  />
+</Annotation>
+
+You can see this work at the [caefisica/NotasTeX](https://github.com/caefisica/NotasTeX)
+repository. We're also building a scrapping tool to automatically share scholarships and
+events across all our WhatsApp groups and the website, eliminating manual posting.[^5]
+
+Next, we want to expand. We're also working on a news feed that automatically pulls
+physics-related articles. The repository is at
+[caefisica/news-reader](https://github.com/caefisica/news-reader), with data scraping
+improvements at [caefisica/news-scraper](https://github.com/caefisica/news-scraper). We
+are also looking into ways to improve site search and automate social media posts.
+
+Many ideas, one maintainer. But with more people involved, I think we can make this work.
+
+# How we'll know if this is working
+
+Success for us isn’t about traffic numbers, since **physics undergraduates** is already a
+niche group, and 800 visits a month is already plenty.
+
+We'll succeed if:
+
+- Students from different classes contribute new content
+- More students apply for exchanges and graduate school using information we provide
+- New student groups form around specific physics areas
+- People actually give us feedback on the site and suggest new ideas
+
+And we'll fail if:
+
+- Nobody uses our channels
+- Exchange program participation remains unchanged
+- The website becomes stale and outdated
+- We end up building this in a bubble, without talking to other students
+
+@caefisica attempts to build something useful for the community. I've learned from others'
+videos and code and benefited from the tools they built, so I want to contribute back. If
+someone else can avoid the same obstacles I faced, that's a win.
+
+<footer class='not-prose text-text-secondary mt-16 flex flex-col gap-1 pt-8 text-xs font-[460] opacity-70'>
+  <h1>Acknowledgements</h1>
+  <p>
+    I didn't found @caefisica—it was founded by a group from the class of 2016,
+    particularly Renzo Franco, whom I had the pleasure of interacting with and hearing his
+    recommendations (and complaints about the faculty).
+  </p>
+  <p>
+    Thanks to the entire @caefisica team (both past and present contributors) for bringing
+    the site to life.
+  </p>
+  <p>
+    Thanks to Sergio Cordero, Richard Avalos, and Liuba Ramos for their contributions to
+    the project.
+  </p>
+</footer>
+
+[^1]:
+    I'm not saying you should study only for your exam. But it's reassuring to know that
+    you are ready for the upcoming exam and can focus more on the class itself.
+
+[^2]:
+    Yep, that's how we call it, _base_. This seems unique to the UNMSM. It is not a term
+    in other universities even in the Lima region as far as I know.
+
+[^3]: Class of 2020 was expected to graduate on December of 2024.
+
+[^4]:
+    Area A covers materials and solid state physics, Area B focuses on theoretical and
+    nuclear physics, and Area C covers astronomy and geophysics
+
+[^5]: It is a nightmare having to constantly use Facebook.

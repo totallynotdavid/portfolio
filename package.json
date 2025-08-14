@@ -1,25 +1,30 @@
 {
-  "name": "portfolio",
-  "version": "0.0.1",
-  "description": "David's Personal website",
+  "name": "totallynotdavid-portfolio",
+  "type": "module",
+  "version": "1.0.0",
+  "private": "true",
   "scripts": {
-    "build": "npm run build:t && exec-bin node_modules/.bin/hugo/hugo --gc --minify",
-    "build:t": "npx tailwindcss -i ./themes/tailwind/assets/main.css -o ./themes/tailwind/assets/style.css --watch",
-    "build:lan": "exec-bin node_modules/.bin/hugo/hugo server --bind=0.0.0.0 --baseURL=http://192.168.18.10 --port=1313",
-    "clean": "shx rm -rf public resources",
-    "clean:install": "shx rm -rf package-lock.json node_modules",
-    "test": "npm run -s lint",
-    "postinstall": "hugo-installer --version otherDependencies.hugo --extended --destination node_modules/.bin/hugo"
+    "clean": "shx rm -rf .astro .cache node_modules",
+    "dev": "astro dev --host",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "fmt": "prettier . --write"
   },
-  "author": "David",
-  "license": "MIT",
+  "dependencies": {
+    "@astrojs/mdx": "^4.3.3",
+    "@astrojs/tailwind": "6.0.2",
+    "@tailwindcss/typography": "^0.5.16",
+    "@tailwindcss/vite": "^4.1.11",
+    "astro": "5.12.9",
+    "astro-font": "^1.1.0",
+    "tailwindcss": "^4.1.11"
+  },
   "devDependencies": {
-    "exec-bin": "^1.0.0",
-    "hugo-installer": "^4.0.1",
-    "shx": "^0.3.4",
-    "tailwindcss": "^3.2.7"
-  },
-  "otherDependencies": {
-    "hugo": "0.96.0"
+    "prettier": "^3.6.2",
+    "prettier-plugin-astro": "^0.14.1",
+    "prettier-plugin-tailwindcss": "^0.6.14",
+    "shx": "^0.4.0"
   }
 }

@@ -1,0 +1,64 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import mdxComponents from '@/components/mdx';
+import PostList from '@/components/blog/PostList.astro';
+import PostHeader from '@/components/blog/PostHeader.astro';
+import { useTranslations } from '@/i18n/utils';
+import { i18nConfig } from '@/i18n/config';
+
+export async function getStaticPaths() {
+  const languages = Object.keys(i18nConfig.languages);
+  return languages.map(lang => ({
+    params: { lang },
+    props: { lang }
+  }));
+}
+
+interface Props {
+  lang: string;
+}
+
+const { lang } = Astro.props;
+
+if (!lang || !(lang in i18nConfig.languages)) {
+  return Astro.redirect(`/${i18nConfig.defaultLang}/`, 301);
+}
+
+const t = useTranslations(lang);
+
+let HomeContent;
+try {
+  if (lang === 'es') {
+    HomeContent = (await import('@/content/home.es.mdx')).default;
+  } else {
+    HomeContent = (await import('@/content/home.mdx')).default;
+  }
+} catch {
+  HomeContent = (await import('@/content/home.mdx')).default;
+}
+---
+
+<Layout title={t('site.title')} description={t('site.description')} type='WebPage'>
+  <main class='flex w-full justify-center px-6 pt-12 pb-10 md:pt-20'>
+    <div class='w-full max-w-520'>
+      <article class='prose-a:styled-link prose dark:prose-invert mb-8 max-w-none'>
+        <PostHeader
+          title={t('site.title')}
+          showLastModified={true}
+          filePath='src/pages/[lang]/index.astro'
+        />
+        <HomeContent components={mdxComponents} />
+      </article>
+
+      <PostList />
+
+      <footer
+        class="before:bg-border-color m-0 pt-10 before:mb-9.5 before:block before:h-px before:w-12.5 before:content-['']"
+      >
+        <p class='text-text-secondary text-[13px] font-[460] opacity-70'>
+          {t('footer.tagline')}
+        </p>
+      </footer>
+    </div>
+  </main>
+</Layout>

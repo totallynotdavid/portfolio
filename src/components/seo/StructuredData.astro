@@ -1,0 +1,98 @@
+---
+import { SITE_CONFIG } from '@/config/site';
+import { createImageObject, getCanonicalUrl } from '@/components/seo/utils';
+import { getLangFromUrl } from '@/i18n/utils';
+
+interface Props {
+  type?: 'BlogPosting' | 'WebPage';
+  title?: string;
+  description?: string;
+  pubDate?: Date;
+  updatedDate?: Date;
+  ogImage?: string;
+  keywords?: string[];
+}
+
+const {
+  type = 'WebPage',
+  title = SITE_CONFIG.title,
+  description = SITE_CONFIG.description[
+    getLangFromUrl(Astro.url) as keyof typeof SITE_CONFIG.description
+  ],
+  pubDate,
+  updatedDate,
+  ogImage = SITE_CONFIG.ogImage,
+  keywords
+} = Astro.props;
+
+const canonicalUrl = getCanonicalUrl(Astro.url.pathname, Astro.site);
+const siteUrl = getCanonicalUrl('/', Astro.site);
+
+const personId = `${siteUrl}#person`;
+const websiteId = `${siteUrl}#website`;
+const organizationId = `${siteUrl}#organization`;
+const currentLang = getLangFromUrl(Astro.url);
+
+const personSchema = {
+  '@type': 'Person',
+  '@id': personId,
+  name: SITE_CONFIG.author.name,
+  jobTitle: SITE_CONFIG.author.jobTitle,
+  email: SITE_CONFIG.author.email,
+  url: siteUrl,
+  image: createImageObject(SITE_CONFIG.author.avatar, Astro.site?.toString()),
+  sameAs: Object.values(SITE_CONFIG.author.social)
+};
+
+const organizationSchema = {
+  '@type': 'Organization',
+  '@id': organizationId,
+  name: SITE_CONFIG.title,
+  url: siteUrl,
+  founder: { '@id': personId },
+  logo: createImageObject(SITE_CONFIG.author.avatar, Astro.site?.toString())
+};
+
+const websiteSchema = {
+  '@type': 'WebSite',
+  '@id': websiteId,
+  name: SITE_CONFIG.title,
+  description:
+    SITE_CONFIG.description[currentLang as keyof typeof SITE_CONFIG.description],
+  url: siteUrl,
+  inLanguage: currentLang,
+  publisher: { '@id': organizationId }
+};
+
+const contentSchema =
+  type === 'BlogPosting'
+    ? {
+        '@type': 'BlogPosting',
+        headline: title,
+        description,
+        url: canonicalUrl,
+        inLanguage: currentLang,
+        mainEntityOfPage: {
+          '@type': 'WebPage',
+          '@id': canonicalUrl
+        },
+        author: { '@id': personId },
+        publisher: { '@id': organizationId },
+        image: createImageObject(ogImage, Astro.site?.toString()),
+        ...(keywords && keywords.length > 0 && { keywords: keywords.join(', ') }),
+        ...(pubDate && {
+          datePublished: pubDate.toISOString(),
+          dateModified: (updatedDate || pubDate).toISOString()
+        })
+      }
+    : null;
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [websiteSchema, organizationSchema, personSchema, contentSchema].filter(
+    Boolean
+  )
+};
+---
+
+<script type='application/ld+json' is:inline set:html={JSON.stringify(structuredData)} />

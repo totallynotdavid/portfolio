@@ -1,0 +1,12 @@
+---
+import Separator from '@/components/ui/Separator.astro';
+interface Props {
+  id?: string;
+  [key: string]: any;
+}
+const { id, ...rest } = Astro.props as Props;
+---
+
+<Separator>
+  <h1 id={id} {...rest}><slot /></h1>
+</Separator>

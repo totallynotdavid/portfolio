@@ -1,0 +1,227 @@
+---
+title: 'Reconstruyendo este sitio con Astro'
+pubDate: 2025-08-13
+description: 'Una mirada técnica a cómo reconstruí mi sitio web personal usando Astro.'
+keywords: ['astro', 'tailwindcss', 'mdx', 'i18n']
+ogImage: '/assets/images/rebuilding-with-astro-og.jpg'
+---
+
+import Annotation from '@/components/mdx/Annotation.astro';
+import MediaEmbed from '@/components/mdx/MediaEmbed.astro';
+import Mark from '@/components/mdx/Mark.astro';
+
+Acabo de terminar de reconstruir este sitio web desde cero usando Astro. Esta fue mi
+primera vez trabajando with Astro, y quería mantener las dependencias al mínimo mientras
+creaba algo rápido, fácil de mantener y agradable de leer. El sitio sirve como un archivo
+de mis escritos y proyectos, y usé la reconstrucción como una oportunidad para
+experimentar con tecnologías que no había probado antes.
+
+El nuevo stack es simple: Astro para la generación de sitios estáticos, MDX para la
+creación de contenido mejorado, y Tailwind CSS para el estilizado. He trabajado con Hugo
+antes (ver [@caefisica](./caefisica)), así que tenía algo de experiencia con generadores
+de sitios estáticos, pero el enfoque de Astro se sintió lo suficientemente diferente como
+para justificar la exploración.
+
+# Por qué Astro me convenció
+
+Astro genera HTML estático en tiempo de construcción, similar a Hugo, pero maneja
+JavaScript de manera diferente. Escribes componentes usando sintaxis estilo React que se
+compilan a HTML plano. Cuando necesitas interactividad, como la tabla de contenidos
+flotante o el sistema de anotaciones que construí, la agregas quirúrgicamente a
+componentes específicos sin inflar todo el sitio.
+
+La integración de TypeScript funciona sin necesidad de configurar nada. El modelo mental
+es simple: escribes componentes, se renderizan a HTML, ya terminaste. Sin misterios de
+webpack o confusión en el pipeline de construcción.
+
+Este enfoque tenía sentido para un sitio como el mío enfocado en contenido. La mayoría de
+páginas necesitan cero JavaScript, pero cuando sí lo necesito para funcionalidades como el
+sistema de anotaciones, puedo agregarlo precisamente donde se requiere.
+
+# Manejando múltiples idiomas sin tanto desorden
+
+Soportar contenido en inglés y español requirió algo de reflexión. Hugo maneja esto
+elegantemente con archivos de configuración y convenciones de nombres como `post.en.md` y
+`post.es.md` en el mismo directorio[^1]. Astro te empuja hacia carpetas de idiomas
+separadas, lo que hace más difícil encontrar las traducciones de muchas publicaciones (en
+mi opinión, claramente).
+
+Me decidí por prefijos de URL: publicaciones en inglés en `/en/titulo-post` y en español
+en `/es/titulo-post`. Esto hace que la estructura sea clara para usuarios y motores de
+búsqueda. La configuración es simple:
+
+```typescript
+// astro.config.ts
+export default defineConfig({
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'es'],
+    routing: {
+      prefixDefaultLocale: true,
+      redirectToDefaultLocale: true
+    }
+  }
+});
+```
+
+La estructura de páginas se vuelve `src/pages/[lang]/...` con las publicaciones del blog
+manejadas por un solo archivo de ruta dinámica en `src/pages/[lang]/[slug].astro`. La
+función `getStaticPaths` obtiene todas las publicaciones de `src/content/posts/`,
+identifica el idioma de los nombres de archivo, y genera páginas estáticas para cada una.
+
+Para el cambio de idioma, escribí una función `getLanguageHref` en `src/i18n/utils.ts` que
+construye un mapa con las traducciones al momento de contruir el sitio al analizar los
+nombres de archivo. El selector de idioma siempre sabe la URL correcta para las
+traducciones.
+
+# Construyendo componentes que mejoran la escritura
+
+Los componentes MDX resolvieron problemas específicos de escritura que no podía manejar
+con Markdown plano. En lugar de estar limitado a formato básico, puedo crear componentes
+personalizados para diseños e interacciones complejas.
+
+Más interesante aún, puedo personalizar elementos HTML básicos a través de un sistema de
+mapeo. En `mdx.ts` (en `src/components`), mapeo elementos estándar a componentes
+modificados:
+
+```typescript
+export const mdxComponents = {
+  a: Link,
+  h1: H1,
+  h2: H2,
+  hr: HrDots
+};
+```
+
+Cuando Astro procesa contenido MDX, paso estos componentes al Content renderizado:
+
+```astro
+<Content components={mdxComponents} />
+```
+
+Luego, Astro reemplaza las etiquetas HTML coincidentes con los componentes mapeados
+durante el renderizado. Esto crea una experiencia de lectura cohesiva sin hacks extraños.
+Algo que no creo que se pudiera lograr en Hugo, por ejemplo.
+
+El sistema de anotaciones fue el componente más complejo que construí. Quería notas al
+margen y comentarios sin interrumpir el flujo del texto, similar a las revistas impresas
+bien diseñadas.
+
+<Annotation>
+  El componente envuelve texto y proporciona comentarios en un slot separado. En
+  escritorio, dibuja un corchete SVG dibujado a mano que conecta el texto con un
+  comentario lateral.
+  <Fragment slot='comment' set:text='Como esta anotación que estás leyendo ahora' />
+</Annotation>
+
+La implementación calcula las dimensiones del texto anotado y genera dinámicamente datos
+de ruta SVG. Los métodos `createVerticalBracket` y `createHorizontalBracket` usan
+matemáticas aleatorias a través de una función `wobble` para crear una apariencia
+imperfecta, dibujada a mano.
+
+En móvil, el corchete se voltea horizontal y aparece debajo del texto. Un `ResizeObserver`
+re-ejecuta la lógica de layout cuando cambia el tamaño de la ventana. El corchete se anima
+usando las propiedades CSS `stroke-dasharray` y `stroke-dashoffset`, creando un efecto de
+dibujo.
+
+También construí un componente de medios unificado para imágenes, videos e iframes. En
+lugar de recordar diferentes sintaxis de Markdown, uso el mismo componente:
+
+```astro
+import myImportedImage from '@/assets/images/my-image.jpg';
+
+<MediaEmbed
+  src={myImportedImage}
+  alt='Una imagen de ejemplo'
+  caption='Esto agrega un pie de foto automáticamente.'
+  aspectRatio='16/9'
+/>
+```
+
+El componente detecta el tipo de medio automáticamente. Las imágenes obtienen la
+optimización de Astro con formatos AVIF y WebP. Los videos obtienen etiquetas HTML5
+apropiadas. Todo obtiene lazy loading y manejo de errores.
+
+La clase `UnifiedMediaLoader` maneja el trabajo pesado. Usa `IntersectionObserver` para
+detectar cuando los contenedores de medios se acercan al viewport, luego comienza a cargar
+assets. Para prevenir congestión de red, mantiene una cola con un máximo de tres cargas
+concurrentes. Durante la carga, muestra loaders de esqueleto animados con CSS. Las cargas
+fallidas muestran mensajes de error con botones de reintento.
+
+Para imágenes importadas localmente, aprovecha el componente `Picture` de Astro para
+generar múltiples formatos y tamaños de `srcset`, sirviendo versiones óptimas a los
+navegadores.
+
+## La trampa de generación dinámica de clases de Tailwind
+
+Pasé una cantidad vergonzosa de tiempo (1 hora) depurando la generación dinámica de clases
+de Tailwind. Quería aplicar automáticamente clases basadas en la prop `aspectRatio` de
+MediaEmbed. Establecer algo como '4/3' debería simplemente funcionar.
+
+Pero Tailwind analiza la salida de construcción de Astro buscando nombres de clase en
+tiempo de construcción. No puede ver valores dinámicos. La solución fue predefinir todas
+las posibles clases de aspect ratio. Leer la documentación me habría ahorrado horas[^2].
+
+# Detalles de rendimiento y accesibilidad
+
+Algunas mejoras son apenas visibles pero mejoran significativamente la experiencia. La
+tabla de contenidos flotante resalta la sección actual mientras se hace scroll y anuncia
+navegación a lectores de pantalla cuando se hace clic.
+
+El componente rastrea la posición del scroll y resalta los enlaces correspondientes usando
+una bandera `ticking` dentro de un bucle `requestAnimationFrame`. Esto previene el manejo
+excesivo de eventos de scroll que dañaría el rendimiento.
+
+Cuando los usuarios hacen clic en enlaces de la tabla de contenidos, un elemento
+visualmente oculto con `aria-live="polite"` anuncia la navegación a lectores de pantalla.
+La animación CSS temporalmente resalta el encabezado correspondiente, proporcionando
+retroalimentación visual clara.
+
+Para SEO, cada página genera datos estructurados JSON-LD para que los motores de búsqueda
+entiendan el tipo de contenido, fecha de publicación e información de autoría. El sitio
+automáticamente crea etiquetas hreflang enlazando versiones de idioma, ayudando con la
+optimización de búsqueda internacional.
+
+Tuve que personalizar la generación de notas al pie en `astro.config.ts` para usar
+etiquetas `<h3>` con clases `sr-only`. Esto mantiene los encabezados "Notas al pie" fuera
+de la tabla de contenidos mientras permanecen accesibles para lectores de pantalla.
+
+# Sistema de diseño y tipografía
+
+El diseño visual se basa en un sistema simple implementado con Tailwind y propiedades
+personalizadas CSS. Definí variables en `src/styles/global.css` para colores, fuentes y
+espaciado. Los modos claro y oscuro funcionan automáticamente usando la media query
+`prefers-color-scheme`.
+
+Para tipografía, usé `astro-font` para manejar la carga eficientemente. Inter proporciona
+excelente legibilidad en pantalla para texto de cuerpo. Caveat, una fuente cursiva, da a
+las anotaciones una sensación manuscrita que complementa los corchetes SVG.
+
+El paquete de carga de fuentes tiene algunos problemas. Falla en construcciones de Windows
+y parece haber estancado el desarrollo con pull requests sin revisar durante meses. Podría
+removerlo en iteraciones futuras, pero funciona por ahora.
+
+# Lo que aprendí
+
+Esta reconstrucción me forzó a pensar más sobre rendimiento, experiencia de usuario y
+mantenibilidad. La capacidad de encapsular lógica compleja en componentes MDX
+reutilizables es poderosa y hace la creación de contenido más placentera.
+
+El enfoque de Astro hacia la hidratación parcial y arquitectura basada en componentes
+encaja bien con sitios enfocados en contenido. Obtienes rendimiento de sitio estático con
+capacidades dinámicas exactamente donde se necesita.
+
+Todo el código está disponible en
+[GitHub](https://github.com/totallynotdavid/totallynotdavid.github.io) si quieres explorar
+los detalles de implementación.
+
+[^1]:
+    Ver
+    [documentación multilingüe de Hugo](https://gohugo.io/content-management/multilingual/)
+    para más detalles.
+
+[^2]:
+    Ver
+    [documentación de Tailwind CSS](https://tailwindcss.com/docs/detecting-classes-in-source-files#dynamic-class-names)
+    para información sobre generación de clases. Pasé una hora a las 2 AM depurando esto,
+    si hubiera leído la documentación lo habría resuelto inmediatamente.

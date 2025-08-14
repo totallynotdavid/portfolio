@@ -1,0 +1,214 @@
+---
+title: 'Rebuilding this site with Astro'
+pubDate: 2025-08-13
+description: 'A technical look at how I rebuilt my personal website using Astro.'
+keywords: ['astro', 'tailwindcss', 'mdx', 'i18n']
+ogImage: '/assets/images/rebuilding-with-astro-og.jpg'
+---
+
+import Annotation from '@/components/mdx/Annotation.astro';
+import MediaEmbed from '@/components/mdx/MediaEmbed.astro';
+import Mark from '@/components/mdx/Mark.astro';
+
+I just finished rebuilding this website from scratch using Astro. This was my first time
+working with Astro, and I wanted to keep dependencies minimal while creating something
+fast, maintainable, and polished. The site serves as an archive for my writing and
+projects, and I used the rebuild as a chance to experiment with technologies I hadn't
+tried before.
+
+The new stack is straightforward: Astro for static site generation, MDX for enhanced
+content authoring, and Tailwind CSS for styling. I've worked with Hugo before (see
+[@caefisica](./caefisica)), so I had some experience with static site generators, but
+Astro's approach felt different enough to warrant exploration.
+
+# Why Astro clicked for me
+
+Astro generates static HTML at build time, similar to Hugo, but handles JavaScript
+differently. You write components using React-style syntax that compile to plain HTML.
+When you need interactivity, like the floating table of contents or annotation system I
+built, you add it surgically to specific components without bloating the entire site.
+
+The TypeScript integration works without configuration headaches. The mental model is
+simple: write components, they render to HTML, you're done. No webpack mysteries or build
+pipeline confusion.
+
+This approach made sense for a content-focused site. Most pages need zero JavaScript, but
+when I do need it for features like the annotation system, I can add it precisely where
+required.
+
+# Handling multiple languages without the mess
+
+Supporting English and Spanish content required some thought. Hugo handles this elegantly
+with configuration files and filename conventions like `post.en.md` and `post.es.md` in
+the same directory [^1]. Astro pushes you toward separate language folders, which feels
+messier when you have many posts (in my opinion, clearly).
+
+I settled on URL prefixing: English posts at `/en/post-title` and Spanish at
+`/es/post-title`. This makes the structure clear to users and search engines. The
+configuration is simple:
+
+```typescript
+// astro.config.ts
+export default defineConfig({
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'es'],
+    routing: {
+      prefixDefaultLocale: true,
+      redirectToDefaultLocale: true
+    }
+  }
+});
+```
+
+The page structure becomes `src/pages/[lang]/...` with blog posts handled by a single
+dynamic route file at `src/pages/[lang]/[slug].astro`. The `getStaticPaths` function
+fetches all posts from `src/content/posts/`, identifies language from filenames, and
+generates static pages for each.
+
+For language switching, I wrote a `getLanguageHref` helper in `src/i18n/utils.ts` that
+builds a translation map at build time by parsing filenames. The language picker always
+knows the correct URL for translations.
+
+# Building components that enhance writing
+
+MDX components solved specific writing problems I couldn't handle with plain Markdown.
+Instead of being limited to basic formatting, I can create custom components for complex
+layouts and interactions.
+
+More interestingly, I can customize basic HTML elements through a mapping system. In
+`mdx.ts` (on `src/components`), I map standard elements to modified components:
+
+```typescript
+export const mdxComponents = {
+  a: Link,
+  h1: H1,
+  h2: H2,
+  hr: HrDots
+};
+```
+
+When Astro processes MDX content, I pass these components to the rendered Content:
+
+```astro
+<Content components={mdxComponents} />
+```
+
+Then, Astro replaces matching HTML tags with the mapped components during rendering. This
+creates a cohesive reading experience without weird hacks. Something that I don't think
+could be achieved in Hugo for example.
+
+The annotation system was the most complex component I built. I wanted side notes and
+commentary without interrupting text flow, similar to well-designed print magazines.
+
+<Annotation>
+  The component wraps text and provides comments in a separate slot. On desktop, it draws
+  a hand-drawn SVG bracket connecting text to a side comment.
+  <Fragment slot='comment' set:text='Like this annotation you are reading now' />
+</Annotation>
+
+The implementation calculates annotated text dimensions and dynamically generates SVG path
+data. The `createVerticalBracket` and `createHorizontalBracket` methods use randomized
+math through a `wobble` function to create an imperfect, hand-drawn appearance.
+
+On mobile, the bracket flips horizontal and appears below the text. A `ResizeObserver`
+re-runs layout logic when window size changes. The bracket animates using
+`stroke-dasharray` and `stroke-dashoffset` CSS properties, creating a drawing effect.
+
+I also built a unified media component for images, videos, and iframes. Instead of
+remembering different Markdown syntax, I use the same component:
+
+```astro
+import myImportedImage from '@/assets/images/my-image.jpg';
+
+<MediaEmbed
+  src={myImportedImage}
+  alt='An example image'
+  caption='This adds a caption automatically.'
+  aspectRatio='16/9'
+/>
+```
+
+The component detects media type automatically. Images get Astro's optimization with AVIF
+and WebP formats. Videos get proper HTML5 tags. Everything gets lazy loading and error
+handling.
+
+The `UnifiedMediaLoader` class handles the heavy lifting. It uses `IntersectionObserver`
+to detect when media containers approach the viewport, then starts loading assets. To
+prevent network congestion, it maintains a queue with a maximum of three concurrent loads.
+During loading, it shows CSS-animated skeleton loaders. Failed loads display error
+messages with retry buttons.
+
+For locally imported images, it leverages Astro's `Picture` component to generate multiple
+`srcset` formats and sizes, serving optimal versions to browsers.
+
+## The Tailwind dynamic class generation trap
+
+I spent an embarrassing amount of time (1 hour) debugging dynamic Tailwind class
+generation. I wanted to automatically apply classes based on the `aspectRatio` prop of
+MediaEmbed. Setting something like '4/3' should just work.
+
+But Tailwind parses Astro's build output looking for class names at build time. It can't
+see dynamic values. The solution was pre-defining all possible aspect ratio classes.
+Reading the documentation would have saved hours[^2].
+
+# Performance and accessibility details
+
+Some improvements are barely visible but significantly enhance the experience. The
+floating table of contents highlights the current section while scrolling and announces
+navigation to screen readers when clicked.
+
+The component tracks scroll position and highlights corresponding links using a `ticking`
+flag inside a `requestAnimationFrame` loop. This prevents excessive scroll event handling
+that would hurt performance.
+
+When users click table of contents links, a visually-hidden element with
+`aria-live="polite"` announces navigation to screen readers. CSS animation temporarily
+highlights the corresponding heading, providing clear visual feedback.
+
+For SEO, every page generates JSON-LD structured data so search engines understand content
+type, publication date, and authoring information. The site automatically creates hreflang
+tags linking language versions, helping with international search optimization.
+
+I had to customize footnote generation in `astro.config.ts` to use `<h3>` tags with
+`sr-only` classes. This keeps "Footnotes" headings from cluttering the table of contents
+while remaining accessible to screen readers.
+
+# Design system and typography
+
+The visual design relies on a simple system implemented with Tailwind and CSS custom
+properties. I defined variables in `src/styles/global.css` for colors, fonts, and spacing.
+Light and dark modes work automatically using the `prefers-color-scheme` media query.
+
+For typography, I used `astro-font` to handle loading efficiently. Inter provides
+excellent screen readability for body text. Caveat, a cursive font, gives annotations a
+handwritten feel that complements the SVG brackets.
+
+The font loading package has some issues. It fails on Windows builds and seems to have
+stalled development with unreviewed pull requests sitting for months. I might remove it in
+future iterations, but it works for now.
+
+# What I learned
+
+This rebuild forced me to think more about performance, user experience, and
+maintainability. The ability to encapsulate complex logic into reusable MDX components is
+powerful and makes content creation more enjoyable.
+
+Astro's approach to partial hydration and component-based architecture fits well with
+content-focused sites. You get static site performance with dynamic capabilities exactly
+where needed.
+
+The entire codebase is available on
+[GitHub](https://github.com/totallynotdavid/totallynotdavid.github.io) if you want to
+explore the implementation details.
+
+[^1]:
+    See
+    [Hugo's multilingual documentation](https://gohugo.io/content-management/multilingual/)
+    for more details.
+
+[^2]:
+    See
+    [Tailwind CSS documentation](https://tailwindcss.com/docs/detecting-classes-in-source-files#dynamic-class-names)
+    for information on class generation. I spent an hour at 2 AM debugging this when
+    reading the docs would have solved it immediately.

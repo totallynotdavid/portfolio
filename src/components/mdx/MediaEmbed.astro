@@ -1,0 +1,622 @@
+---
+import { Image, Picture } from 'astro:assets';
+
+interface Props {
+  src: string | ImageMetadata;
+  type?: 'video' | 'image' | 'iframe';
+  poster?: string;
+  alt?: string;
+  caption?: string;
+  aspectRatio?:
+    | 'auto'
+    | 'square'
+    | '16/9'
+    | '16/10'
+    | '4/3'
+    | '21/9'
+    | '3/2'
+    | '1/1'
+    | 'video';
+  autoplay?: boolean;
+  muted?: boolean;
+  loop?: boolean;
+  controls?: boolean;
+  className?: string;
+  rounded?: boolean;
+  priority?: boolean;
+  preload?: 'none' | 'metadata' | 'auto';
+  sizes?: string;
+  quality?: number;
+  formats?: ('webp' | 'avif' | 'png' | 'jpg')[];
+  width?: number;
+  height?: number;
+  densities?: number[];
+}
+
+const {
+  src,
+  type,
+  poster,
+  alt = '',
+  caption,
+  aspectRatio = 'auto',
+  autoplay = false,
+  muted = true,
+  loop = false,
+  controls = true,
+  className = '',
+  rounded = true,
+  priority = false,
+  preload = 'metadata',
+  sizes,
+  quality = 80,
+  formats = ['avif', 'webp'],
+  width,
+  height,
+  densities = [1, 2]
+} = Astro.props;
+
+// Check if src is an imported image object or a string
+const isImportedImage = typeof src === 'object' && src !== null && 'src' in src;
+const srcString = isImportedImage ? (src as ImageMetadata).src : (src as string);
+
+const getMediaType = (src: string | ImageMetadata): 'video' | 'image' | 'iframe' => {
+  if (type) return type;
+
+  if (isImportedImage) return 'image';
+
+  const srcStr = typeof src === 'string' ? src : src.src;
+
+  if (srcStr.includes('?origWidth=') && srcStr.includes('&origFormat=')) {
+    const formatMatch = srcStr.match(/&origFormat=(\w+)/);
+    if (formatMatch) {
+      const format = formatMatch[1].toLowerCase();
+      const imageFormats = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'avif'];
+      if (imageFormats.includes(format)) return 'image';
+    }
+  }
+
+  const urlWithoutQuery = srcStr.split('?')[0];
+  const extension = urlWithoutQuery.split('.').pop()?.toLowerCase();
+
+  const videoExtensions = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'm4v'];
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'avif'];
+
+  if (videoExtensions.includes(extension || '')) return 'video';
+  if (imageExtensions.includes(extension || '')) return 'image';
+
+  return 'iframe';
+};
+
+const mediaType = getMediaType(src);
+const mediaId = `media-${Math.random().toString(36).slice(2, 9)}`;
+
+const aspectRatioClasses: Record<string, string> = {
+  auto: '',
+  square: 'aspect-square',
+  '16/9': 'aspect-video',
+  '16/10': 'aspect-16/10',
+  '4/3': 'aspect-4/3',
+  '21/9': 'aspect-21/9',
+  '3/2': 'aspect-3/2',
+  '1/1': 'aspect-square',
+  video: 'aspect-video'
+};
+
+const aspectRatioClass = aspectRatioClasses[aspectRatio] || '';
+const loadingStrategy = priority ? 'eager' : 'lazy';
+const showPlaceholder = !priority;
+
+// Prepare props for Astro Image/Picture components
+const imageProps = {
+  alt,
+  width: width || (isImportedImage ? undefined : 1200),
+  height: height || (isImportedImage ? undefined : 675),
+  quality,
+  loading: loadingStrategy,
+  class: 'h-full w-full object-cover'
+} as const;
+
+const pictureProps = {
+  ...imageProps,
+  formats,
+  densities,
+  sizes: sizes || '(max-width: 768px) 100vw, 800px'
+} as const;
+---
+
+<figure class:list={['not-prose py-8', className]} id={mediaId}>
+  <div
+    class:list={[
+      'media-container relative w-full overflow-hidden bg-gray-50 dark:bg-white/5',
+      rounded && 'rounded-lg',
+      aspectRatioClass
+    ]}
+    data-media-container
+    data-media-type={mediaType}
+    data-src={srcString}
+    data-priority={priority}
+    data-poster={poster}
+    data-alt={alt || caption || ''}
+    data-autoplay={autoplay}
+    data-muted={muted}
+    data-loop={loop}
+    data-controls={controls}
+    data-preload={preload}
+  >
+    {
+      showPlaceholder && (
+        <div class='loading-placeholder absolute inset-0 flex flex-col items-center justify-center'>
+          <div class='skeleton-loader mb-2' />
+          <div class='text-xs text-gray-400 dark:text-gray-600'>Loading...</div>
+        </div>
+      )
+    }
+
+    <div
+      class='error-placeholder absolute inset-0 hidden flex-col items-center justify-center'
+    >
+      <div class='mb-2 text-sm text-red-500'>⚠️ Failed to load media</div>
+      <button class='retry-btn text-xs text-blue-500 underline hover:text-blue-600'>
+        Retry
+      </button>
+    </div>
+
+    <div class='media-content h-full w-full' data-media-type={mediaType}>
+      {
+        mediaType === 'image' && (
+          <>
+            {isImportedImage && formats.length > 0 ? (
+              <Picture src={src as ImageMetadata} {...pictureProps} />
+            ) : (
+              <Image
+                src={src as any}
+                {...imageProps}
+                {...(sizes && { sizes })}
+                {...(densities && { densities })}
+              />
+            )}
+          </>
+        )
+      }
+
+      {
+        mediaType === 'video' && (
+          <video
+            class='h-full w-full object-cover'
+            poster={poster}
+            autoplay={autoplay && muted}
+            muted={muted}
+            loop={loop}
+            controls={controls}
+            preload={preload}
+            data-src={srcString}
+            aria-label={alt || caption}
+          >
+            <source src={srcString} />
+            Your browser does not support the video tag.
+          </video>
+        )
+      }
+
+      {
+        mediaType === 'iframe' && (
+          <iframe
+            class='h-full w-full border-0'
+            data-src={srcString}
+            title={alt || caption || 'Embedded content'}
+            loading={loadingStrategy}
+            sandbox='allow-scripts allow-same-origin allow-presentation'
+            referrerpolicy='strict-origin-when-cross-origin'
+          />
+        )
+      }
+    </div>
+  </div>
+
+  {
+    caption && (
+      <figcaption class='text-text-secondary/60 pt-3 text-center text-xs leading-relaxed'>
+        {caption}
+      </figcaption>
+    )
+  }
+</figure>
+
+<style>
+  .media-container {
+    box-shadow: inset 0 0 0 1px #f2f2f2;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .media-container {
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .skeleton-loader {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.08) 25%,
+      rgba(0, 0, 0, 0.15) 50%,
+      rgba(0, 0, 0, 0.08) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .skeleton-loader {
+      background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.05) 25%,
+        rgba(255, 255, 255, 0.15) 50%,
+        rgba(255, 255, 255, 0.05) 75%
+      );
+      background-size: 200% 100%;
+    }
+  }
+
+  .media-content {
+    opacity: 0;
+    transform: scale(1.01);
+    transition:
+      opacity 0.4s ease,
+      transform 0.4s ease;
+  }
+
+  .media-content.loaded {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  [data-priority='true'] .media-content {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .media-container[data-loading='true'] {
+    cursor: wait;
+  }
+
+  .media-container[data-error='true'] .loading-placeholder {
+    display: none;
+  }
+
+  .media-container[data-error='true'] .error-placeholder {
+    display: flex;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-loader {
+      animation: none;
+      opacity: 0.5;
+    }
+    .media-content {
+      transition: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  // Extend the global Event types for custom events
+  declare global {
+    interface WindowEventMap {
+      mediaLoaded: CustomEvent<{ container: HTMLElement }>;
+      mediaError: CustomEvent<{ container: HTMLElement }>;
+    }
+  }
+
+  class UnifiedMediaLoader {
+    private observer: IntersectionObserver | null = null;
+    private loadQueue: Set<HTMLElement> = new Set();
+    private maxConcurrentLoads = 3;
+    private currentLoads = 0;
+
+    constructor() {
+      this.init();
+      this.setupImageHandlers();
+    }
+
+    init() {
+      this.loadPriorityMedia();
+
+      if (!('IntersectionObserver' in window)) {
+        this.fallbackLoad();
+        return;
+      }
+
+      this.observer = new IntersectionObserver(
+        entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              this.queueMediaLoad(entry.target as HTMLElement);
+              this.observer?.unobserve(entry.target);
+            }
+          });
+        },
+        {
+          rootMargin: '50px 0px',
+          threshold: 0.1
+        }
+      );
+
+      // observe all non-priority containers
+      document
+        .querySelectorAll('[data-media-container]:not([data-priority="true"])')
+        .forEach(container => {
+          this.observer?.observe(container);
+        });
+    }
+
+    setupImageHandlers() {
+      // Use proper event typing
+      window.addEventListener('mediaLoaded', this.handleMediaLoad.bind(this));
+      window.addEventListener('mediaError', this.handleMediaError.bind(this));
+    }
+
+    handleMediaLoad(event: CustomEvent<{ container: HTMLElement }>) {
+      const container = event.detail.container;
+      if (container) {
+        this.onMediaLoad(container);
+      }
+    }
+
+    handleMediaError(event: CustomEvent<{ container: HTMLElement }>) {
+      const container = event.detail.container;
+      if (container) {
+        this.onMediaError(container);
+      }
+    }
+
+    loadPriorityMedia() {
+      document
+        .querySelectorAll('[data-media-container][data-priority="true"]')
+        .forEach(container => {
+          this.loadMedia(container as HTMLElement);
+        });
+    }
+
+    fallbackLoad() {
+      document.querySelectorAll('[data-media-container]').forEach((container, index) => {
+        setTimeout(() => {
+          this.loadMedia(container as HTMLElement);
+        }, index * 100);
+      });
+    }
+
+    queueMediaLoad(container: HTMLElement) {
+      this.loadQueue.add(container);
+      this.processQueue();
+    }
+
+    async processQueue() {
+      if (this.currentLoads >= this.maxConcurrentLoads || this.loadQueue.size === 0) {
+        return;
+      }
+
+      const container = this.loadQueue.values().next().value as HTMLElement;
+      if (!container) return;
+
+      this.loadQueue.delete(container);
+      this.currentLoads++;
+
+      try {
+        await this.loadMedia(container);
+      } finally {
+        this.currentLoads--;
+        this.processQueue();
+      }
+    }
+
+    async loadMedia(container: HTMLElement): Promise<void> {
+      const src = container.dataset.src;
+      const mediaType = container.dataset.mediaType;
+
+      if (!src) return;
+
+      container.setAttribute('data-loading', 'true');
+
+      try {
+        switch (mediaType) {
+          case 'image':
+            await this.handleImageLoad(container);
+            break;
+          case 'video':
+            await this.loadVideo(container, src);
+            break;
+          case 'iframe':
+            await this.loadIframe(container, src);
+            break;
+        }
+
+        this.onMediaLoad(container);
+      } catch (error) {
+        console.error(`Failed to load ${mediaType}:`, error);
+        this.onMediaError(container);
+      } finally {
+        container.removeAttribute('data-loading');
+      }
+    }
+
+    async handleImageLoad(container: HTMLElement): Promise<void> {
+      const img = container.querySelector('img');
+      if (!img) return;
+
+      return new Promise((resolve, reject) => {
+        if (img.complete && img.naturalWidth > 0) {
+          resolve();
+          return;
+        }
+
+        const timeout = setTimeout(() => {
+          reject(new Error('Image load timeout'));
+        }, 10000);
+
+        const onLoad = () => {
+          clearTimeout(timeout);
+          cleanup();
+          resolve();
+        };
+
+        const onError = () => {
+          clearTimeout(timeout);
+          cleanup();
+          reject(new Error('Image load failed'));
+        };
+
+        const cleanup = () => {
+          img.removeEventListener('load', onLoad);
+          img.removeEventListener('error', onError);
+        };
+
+        img.addEventListener('load', onLoad);
+        img.addEventListener('error', onError);
+      });
+    }
+
+    async loadVideo(container: HTMLElement, src: string): Promise<void> {
+      const video = container.querySelector('video');
+      if (!video || video.src) return;
+
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Video load timeout'));
+        }, 15000);
+
+        const onLoadedData = () => {
+          clearTimeout(timeout);
+          cleanup();
+          resolve();
+        };
+
+        const onError = () => {
+          clearTimeout(timeout);
+          cleanup();
+          reject(new Error('Video load failed'));
+        };
+
+        const cleanup = () => {
+          video.removeEventListener('loadeddata', onLoadedData);
+          video.removeEventListener('error', onError);
+        };
+
+        video.addEventListener('loadeddata', onLoadedData);
+        video.addEventListener('error', onError);
+
+        const source = video.querySelector('source');
+        if (source) {
+          source.src = src;
+        }
+        video.load();
+      });
+    }
+
+    async loadIframe(container: HTMLElement, src: string): Promise<void> {
+      const iframe = container.querySelector('iframe');
+      if (!iframe || iframe.src) return;
+
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Iframe load timeout'));
+        }, 10000);
+
+        const onLoad = () => {
+          clearTimeout(timeout);
+          cleanup();
+          resolve();
+        };
+
+        const onError = () => {
+          clearTimeout(timeout);
+          cleanup();
+          reject(new Error('Iframe load failed'));
+        };
+
+        const cleanup = () => {
+          iframe.removeEventListener('load', onLoad);
+          iframe.removeEventListener('error', onError);
+        };
+
+        iframe.addEventListener('load', onLoad);
+        iframe.addEventListener('error', onError);
+
+        iframe.src = src;
+      });
+    }
+
+    onMediaLoad(container: HTMLElement) {
+      const placeholder = container.querySelector('.loading-placeholder') as HTMLElement;
+      const mediaElement = container.querySelector('.media-content') as HTMLElement;
+
+      if (placeholder) {
+        placeholder.style.display = 'none';
+      }
+
+      if (mediaElement) {
+        mediaElement.classList.add('loaded');
+      }
+
+      container.removeAttribute('data-error');
+    }
+
+    onMediaError(container: HTMLElement) {
+      container.setAttribute('data-error', 'true');
+
+      const retryBtn = container.querySelector('.retry-btn');
+      if (retryBtn && !retryBtn.hasAttribute('data-listener-added')) {
+        retryBtn.setAttribute('data-listener-added', 'true');
+        retryBtn.addEventListener('click', () => {
+          container.removeAttribute('data-error');
+          this.queueMediaLoad(container);
+        });
+      }
+    }
+
+    destroy() {
+      if (this.observer) {
+        this.observer.disconnect();
+      }
+      this.loadQueue.clear();
+      window.removeEventListener('mediaLoaded', this.handleMediaLoad.bind(this));
+      window.removeEventListener('mediaError', this.handleMediaError.bind(this));
+    }
+  }
+
+  let mediaLoader: UnifiedMediaLoader | null = null;
+
+  const initUnifiedMedia = () => {
+    if (mediaLoader) {
+      mediaLoader.destroy();
+    }
+    mediaLoader = new UnifiedMediaLoader();
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initUnifiedMedia);
+  } else {
+    initUnifiedMedia();
+  }
+
+  document.addEventListener('astro:page-load', initUnifiedMedia);
+
+  document.addEventListener('astro:before-preparation', () => {
+    if (mediaLoader) {
+      mediaLoader.destroy();
+    }
+  });
+</script>

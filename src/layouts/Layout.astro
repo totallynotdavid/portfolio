@@ -1,0 +1,124 @@
+---
+import '@/styles/global.css';
+import { AstroFont } from 'astro-font';
+import { ClientRouter } from 'astro:transitions';
+import { getLangFromUrl, useTranslations } from '@/i18n/utils';
+import LanguagePicker from '@/components/ui/LanguagePicker.astro';
+import StructuredData from '@/components/seo/StructuredData.astro';
+import HreflangLinks from '@/components/seo/HreflangLinks.astro';
+import { SITE_CONFIG } from '@/config/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  type?: 'BlogPosting' | 'WebPage';
+  pubDate?: Date;
+  updatedDate?: Date;
+  keywords?: string[];
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const {
+  title = t('site.title'),
+  description = t('site.description'),
+  ogImage = SITE_CONFIG.ogImage,
+  type = 'WebPage',
+  pubDate,
+  updatedDate,
+  keywords
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+
+const fontConfig = [
+  {
+    src: [],
+    name: 'Inter',
+    googleFontsURL:
+      'https://fonts.googleapis.com/css2?family=Inter:wght@460;480;500;560;600&display=swap',
+    preload: true,
+    fetch: true,
+    display: 'swap' as const,
+    fallback: 'sans-serif' as const
+  },
+  {
+    src: [],
+    name: 'Caveat',
+    googleFontsURL:
+      'https://fonts.googleapis.com/css2?family=Caveat:wght@400&display=swap',
+    preload: true,
+    fetch: true,
+    display: 'swap' as const,
+    fallback: 'sans-serif' as const
+  }
+];
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset='UTF-8' />
+    <meta
+      name='viewport'
+      content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
+    />
+    <meta name='color-scheme' content='light dark' />
+    <style>
+      html {
+        background-color: hsl(60, 20%, 99%);
+      }
+      @media (prefers-color-scheme: dark) {
+        html {
+          background-color: hsl(0, 0%, 4%);
+        }
+      }
+    </style>
+    <link rel='icon' type='image/png' sizes='139x139' href='/icon.png' />
+
+    <AstroFont config={fontConfig} />
+
+    <title>{title}</title>
+    <meta name='description' content={description} />
+    <link rel='canonical' href={canonicalURL} />
+
+    <meta property='og:title' content={title} />
+    <meta property='og:description' content={description} />
+    <meta property='og:url' content={canonicalURL} />
+    <meta property='og:image' content={new URL(ogImage, Astro.site)} />
+    <meta property='og:image:width' content='1200' />
+    <meta property='og:image:height' content='630' />
+    <meta property='og:image:type' content='image/jpeg' />
+    <meta property='og:type' content='website' />
+    <meta property='og:locale' content={lang === 'es' ? 'es_ES' : 'en_US'} />
+
+    <meta name='twitter:card' content='summary_large_image' />
+    <meta name='twitter:title' content={title} />
+    <meta name='twitter:description' content={description} />
+    <meta name='twitter:image' content={new URL(ogImage, Astro.site)} />
+    <meta name='twitter:creator' content={SITE_CONFIG.author.social.twitter} />
+
+    <meta name='robots' content='index, follow' />
+    <meta name='googlebot' content='index, follow' />
+
+    <HreflangLinks />
+    <StructuredData
+      type={type}
+      title={title}
+      description={description}
+      pubDate={pubDate}
+      updatedDate={updatedDate}
+      ogImage={ogImage}
+      keywords={keywords}
+    />
+    <ClientRouter />
+  </head>
+  <body>
+    <div class='fixed top-4 right-4 z-50'>
+      <LanguagePicker />
+    </div>
+    <slot />
+  </body>
+</html>

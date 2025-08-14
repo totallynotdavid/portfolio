@@ -1,0 +1,280 @@
+---
+import type { MarkdownHeading } from 'astro';
+import { getLangFromUrl, useTranslations, useTranslatedPath } from '@/i18n/utils';
+import '@/styles/toc.css';
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+const tocHeadings = headings.filter(h => h.depth <= 2);
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const translatePath = useTranslatedPath(lang);
+---
+
+<nav aria-label={t('toc.nav_label')} class='text-text-secondary'>
+  <ul class='space-y-0'>
+    <li class='toc-link pb-10'>
+      <a
+        href={translatePath('/')}
+        class='text-text-secondary block py-1 font-medium opacity-50 transition-colors transition-opacity duration-200 ease-out hover:opacity-100'
+        style='font-size: 0.75rem; line-height: 1.4;'
+        aria-label={t('toc.return_home')}
+      >
+        <span class='flex items-center gap-1.5'>
+          <svg
+            width='10'
+            height='10'
+            viewBox='0 0 14 14'
+            fill='none'
+            xmlns='http://www.w3.org/2000/svg'
+            aria-hidden='true'
+          >
+            <path
+              d='M5.5 4L1.5 8M1.5 8L5.5 12M1.5 8H10C11.3807 8 12.5 6.88071 12.5 5.5V5.5C12.5 4.11929 11.3807 3 10 3H8.5'
+              stroke='currentColor'
+              stroke-width='1.25'
+              stroke-linecap='round'
+              stroke-linejoin='round'
+            >
+            </path>
+          </svg>
+          {t('toc.index')}
+        </span>
+      </a>
+    </li>
+
+    {
+      tocHeadings.map(heading => (
+        <li class:list={['toc-link', `depth-${heading.depth}`]}>
+          <a
+            href={`#${heading.slug}`}
+            class:list={[
+              heading.depth === 1
+                ? 'block py-1 font-medium'
+                : 'block py-0.5 pl-3 font-normal',
+              'text-text-secondary opacity-50 transition-colors transition-opacity duration-200 ease-out hover:opacity-100'
+            ]}
+            style='font-size: 0.75rem; line-height: 1.4;'
+            aria-label={`${t('toc.jump_to_section')} ${heading.text}`}
+          >
+            {heading.text}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<script>
+  class TableOfContentsManager {
+    private headings: HTMLElement[] = [];
+    private links: Map<string, HTMLElement> = new Map();
+    private ticking: boolean = false;
+    private lastFlash: HTMLElement | null = null;
+    private flashTimeout: number | null = null;
+    private abortController: AbortController = new AbortController();
+    private resizeObserver: ResizeObserver | null = null;
+
+    constructor() {
+      this.init();
+    }
+
+    private init(): void {
+      this.headings = Array.from(
+        document.querySelectorAll('article h1[id], article h2[id]')
+      );
+
+      this.links = new Map(
+        Array.from(document.querySelectorAll('.toc-link a')).map(a => [
+          decodeURIComponent(a.getAttribute('href') || '').replace('#', ''),
+          a as HTMLElement
+        ])
+      );
+
+      if (this.headings.length === 0) return;
+
+      this.bindEvents();
+      this.updateActive();
+    }
+
+    private bindEvents(): void {
+      const { signal } = this.abortController;
+
+      const onScroll = (): void => {
+        if (this.ticking) return;
+        this.ticking = true;
+        requestAnimationFrame(() => {
+          this.updateActive();
+          this.ticking = false;
+        });
+      };
+
+      window.addEventListener('scroll', onScroll, { passive: true, signal });
+      window.addEventListener('resize', onScroll, { signal });
+
+      document.querySelectorAll('.toc-link a[href^="#"]').forEach(a => {
+        a.addEventListener(
+          'click',
+          e => {
+            const hash =
+              (e.currentTarget as HTMLAnchorElement).getAttribute('href') || '';
+            const slug = decodeURIComponent(hash.replace('#', ''));
+
+            // this is an announcement for screen readers
+            this.announceNavigation(slug);
+
+            requestAnimationFrame(() => this.flashHeading(slug));
+          },
+          { signal }
+        );
+      });
+
+      window.addEventListener(
+        'hashchange',
+        () => {
+          const slug = decodeURIComponent(location.hash.replace('#', ''));
+          this.announceNavigation(slug);
+          this.flashHeading(slug);
+        },
+        { signal }
+      );
+    }
+
+    private announceNavigation(slug: string): void {
+      const heading = document.getElementById(slug);
+      if (heading) {
+        const announcement = `Navigated to section: ${heading.textContent}`;
+        this.createScreenReaderAnnouncement(announcement);
+      }
+    }
+
+    private createScreenReaderAnnouncement(message: string): void {
+      const announcement = document.createElement('div');
+      announcement.setAttribute('aria-live', 'polite');
+      announcement.setAttribute('aria-atomic', 'true');
+      announcement.className = 'sr-only';
+      announcement.textContent = message;
+
+      document.body.appendChild(announcement);
+
+      setTimeout(() => {
+        if (announcement.parentNode) {
+          announcement.parentNode.removeChild(announcement);
+        }
+      }, 1000);
+    }
+
+    private setActive(slug: string): void {
+      document.querySelectorAll('.toc-link a').forEach(a => {
+        a.classList.remove('active');
+        a.removeAttribute('aria-current');
+      });
+
+      if (!slug) return;
+
+      // activate state for current link
+      const activeLink = this.links.get(slug);
+      if (activeLink) {
+        activeLink.classList.add('active');
+        activeLink.setAttribute('aria-current', 'true');
+      }
+    }
+
+    private updateActive(): void {
+      if (!this.headings.length) return;
+
+      const TOP_OFFSET = 96; // px from top to consider item current
+      let currentIndex = -1;
+
+      // find the heading that's currently in view
+      for (let i = 0; i < this.headings.length; i++) {
+        const rect = this.headings[i].getBoundingClientRect();
+        if (rect.top - TOP_OFFSET <= 0) {
+          currentIndex = i;
+        } else {
+          break;
+        }
+      }
+
+      const currentSlug = currentIndex >= 0 ? this.headings[currentIndex].id : '';
+      this.setActive(currentSlug);
+    }
+
+    private flashHeading(slug: string): void {
+      if (!slug) return;
+      const el = document.getElementById(slug);
+      if (!el) return;
+
+      // clear previous flash
+      if (this.lastFlash && this.lastFlash !== el) {
+        this.lastFlash.classList.remove('target');
+      }
+
+      if (this.flashTimeout) {
+        window.clearTimeout(this.flashTimeout);
+        this.flashTimeout = null;
+      }
+
+      // force reflow for animation restart
+      if (el.classList.contains('target')) {
+        el.classList.remove('target');
+        el.offsetWidth;
+      }
+
+      el.classList.add('target');
+      this.lastFlash = el;
+
+      this.flashTimeout = window.setTimeout(() => {
+        el.classList.remove('target');
+        if (this.lastFlash === el) this.lastFlash = null;
+        this.flashTimeout = null;
+      }, 5100);
+    }
+
+    destroy(): void {
+      this.abortController.abort();
+
+      if (this.resizeObserver) {
+        this.resizeObserver.disconnect();
+        this.resizeObserver = null;
+      }
+
+      if (this.flashTimeout) {
+        window.clearTimeout(this.flashTimeout);
+        this.flashTimeout = null;
+      }
+
+      this.headings = [];
+      this.links.clear();
+      this.lastFlash = null;
+    }
+  }
+
+  let tocManager: TableOfContentsManager | null = null;
+
+  const initTOC = (): void => {
+    if (tocManager) {
+      tocManager.destroy();
+    }
+    tocManager = new TableOfContentsManager();
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTOC);
+  } else {
+    initTOC();
+  }
+
+  document.addEventListener('astro:page-load', initTOC);
+
+  document.addEventListener('astro:before-preparation', () => {
+    if (tocManager) {
+      tocManager.destroy();
+      tocManager = null;
+    }
+  });
+</script>

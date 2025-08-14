@@ -1,0 +1,78 @@
+.footnotes {
+  padding: 2.5rem 0 0;
+  --_fn-text-primary: var(--color-text-primary);
+  --_fn-text-secondary: var(--color-text-secondary);
+  --_fn-border: var(--color-border);
+}
+
+.footnotes .styled-link {
+  color: color-mix(in srgb, var(--_fn-text-secondary), var(--_fn-text-primary) 35%);
+}
+
+.footnotes .styled-link:hover {
+  color: var(--_fn-text-primary);
+}
+
+.footnotes .styled-link span {
+  width: 14px;
+}
+
+.footnotes .styled-link svg {
+  color: color-mix(in srgb, var(--_fn-text-secondary), transparent 40%);
+  transform: translateY(-1px);
+}
+
+.footnotes:before {
+  content: '';
+  display: block;
+  width: 3.125rem;
+  height: 1px;
+  background: var(--_fn-border);
+}
+
+.footnotes ol {
+  list-style: none;
+  padding: 3rem 0 0 0.25rem;
+  margin: 0;
+}
+
+.footnotes ol li {
+  position: relative;
+  counter-increment: list;
+  color: color-mix(in srgb, var(--_fn-text-secondary), transparent 40%);
+  font-size: 0.75rem;
+  letter-spacing: 0.00063rem;
+  line-height: 1.2;
+  padding: 0 0 0.5625rem 0.25rem;
+  margin: 0;
+}
+
+.footnotes ol li:before {
+  position: absolute;
+  right: 100%;
+  top: 0;
+  content: counter(list);
+  font-size: 0.45rem;
+  letter-spacing: 0.00063rem;
+  color: color-mix(in srgb, var(--_fn-text-secondary), transparent 25%);
+}
+
+.footnotes ol li p a {
+  z-index: 2;
+}
+
+.footnotes .data-footnote-backref {
+  z-index: 1;
+  position: absolute;
+  inset: 0;
+  bottom: 0.5em;
+  overflow: hidden;
+  display: inline-block;
+  text-indent: -9999px;
+}
+
+.footnotes p {
+  padding: 0;
+  margin: 0;
+  color: inherit;
+}

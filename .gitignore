@@ -1,2 +1,9 @@
+.astro
+.cache
+dist
 node_modules
-public
+public/__astro_font_generated__
+
+# filetypes
+*.ps1
+*.txt

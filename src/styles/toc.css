@@ -1,0 +1,53 @@
+.toc-link a.active {
+  color: var(--color-accent);
+  opacity: 1;
+  transition:
+    color 200ms ease-out,
+    opacity 200ms ease-out;
+}
+
+/* important to contain the animation */
+article h1,
+article h2,
+article h3,
+article h4,
+article h5,
+article h6 {
+  position: relative;
+}
+
+article .target::after {
+  animation: fadeInOut 5s ease both;
+  content: '';
+  position: absolute;
+  inset: 0.5rem -1rem -0.5rem;
+  mix-blend-mode: multiply;
+  background: #ffa;
+  border-radius: 0.5rem;
+  pointer-events: none;
+  z-index: -1;
+}
+
+article h1.target::after,
+article h2.target::after,
+article h3.target::after,
+article h4.target::after,
+article h5.target::after,
+article h6.target::after {
+  inset: -0.5rem -1rem -0.5rem;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.85;
+  }
+  90% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
+}

@@ -1,0 +1,363 @@
+---
+interface Props {
+  animationDuration?: number;
+  commentDelay?: number;
+  strokeWidth?: number;
+  bracketColor?: string;
+  commentMaxWidth?: number;
+  mobileBreakpoint?: number;
+  disableAnimation?: boolean;
+  verticalSpacing?: number;
+  horizontalSpacing?: number;
+}
+
+const {
+  animationDuration = 650,
+  commentDelay = 120,
+  strokeWidth = 2,
+  bracketColor = 'currentColor',
+  commentMaxWidth = 260,
+  mobileBreakpoint = 768,
+  disableAnimation = false,
+  verticalSpacing = 8,
+  horizontalSpacing = 10
+} = Astro.props;
+
+const annotationId = `annotation-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<div class='annotation relative inline-block' data-annotation-id={annotationId}>
+  <span class='annotation-text relative z-10 inline-block'>
+    <slot />
+  </span>
+
+  <svg
+    class='annotation-bracket pointer-events-none absolute inset-0 overflow-visible'
+    aria-hidden='true'
+  >
+    <path
+      class='annotation-path fill-none stroke-current opacity-80 transition-all duration-300'
+      stroke-width={strokeWidth}
+      stroke-linecap='round'
+      stroke-linejoin='round'
+      stroke={bracketColor}
+    >
+    </path>
+  </svg>
+
+  <div
+    class="annotation-comment pointer-events-none absolute font-['Caveat',cursive] text-xl break-words whitespace-normal opacity-100 transition-all duration-350 ease-out"
+  >
+    <slot name='comment' />
+  </div>
+</div>
+
+<style
+  define:vars={{
+    animationDuration: `${animationDuration}ms`,
+    commentDelay: `${commentDelay}ms`,
+    commentMaxWidth: `${commentMaxWidth}px`,
+    verticalSpacing: `${verticalSpacing}px`,
+    horizontalSpacing: `${horizontalSpacing}px`,
+    mobileBreakpoint: `${mobileBreakpoint}px`
+  }}
+>
+  .annotation {
+    --bracket-width: 44px;
+    --comment-offset: 36px;
+  }
+
+  /* default: vertical bracket for desktop */
+  .annotation .annotation-bracket {
+    left: calc(100% + var(--horizontalSpacing));
+    width: var(--bracket-width);
+    height: calc(100% + 32px);
+    top: -16px;
+  }
+
+  .annotation .annotation-comment {
+    left: calc(100% + var(--horizontalSpacing) + var(--bracket-width) + 14px);
+    top: 50%;
+    transform: translateY(-50%);
+    max-width: calc(var(--commentMaxWidth) - 1rem);
+    width: max-content;
+  }
+
+  /* smaller devices: horizontal bracket */
+  .annotation.mobile-layout {
+    margin-bottom: calc(var(--comment-offset) + 30px);
+  }
+
+  .annotation.mobile-layout .annotation-bracket {
+    left: -18px;
+    top: calc(100% + var(--verticalSpacing));
+    width: calc(100% + 36px);
+    height: 28px;
+  }
+
+  .annotation.mobile-layout .annotation-comment {
+    top: calc(100% + var(--comment-offset));
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    max-width: min(100vw - 32px, var(--commentMaxWidth));
+  }
+
+  .annotation-comment.flip-left {
+    left: auto;
+    right: calc(var(--bracket-width) + 14px);
+    transform: translateY(-50%);
+  }
+
+  .annotation.mobile-layout .annotation-comment.flip-left {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+
+  .annotation:hover .annotation-comment {
+    color: var(--color-text-secondary);
+  }
+
+  .annotation:hover .annotation-path {
+    opacity: 100%;
+    stroke: var(--color-text-secondary);
+  }
+
+  @keyframes drawBracket {
+    from {
+      stroke-dashoffset: var(--path-length);
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .annotation-path {
+      stroke-dashoffset: 0 !important;
+      animation: none !important;
+    }
+    .annotation-comment {
+      transition: opacity 0.3s ease !important;
+    }
+  }
+</style>
+
+<script
+  define:vars={{
+    annotationId,
+    animationDuration,
+    commentDelay,
+    mobileBreakpoint,
+    disableAnimation,
+    verticalSpacing,
+    horizontalSpacing
+  }}
+  is:inline
+>
+  class AnnotationManager {
+    constructor(id, config) {
+      this.id = id;
+      this.config = config;
+      this.element = document.querySelector(`[data-annotation-id="${id}"]`);
+      this.resizeObserver = null;
+      this.abortController = new AbortController();
+      this.animationFrame = null;
+      this.prefersReducedMotion =
+        window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches || false;
+
+      if (!this.element) {
+        console.warn(`Annotation element not found: ${id}`);
+        return;
+      }
+
+      this.init();
+    }
+
+    validateDimension(value, min = 8, fallback = 50) {
+      if (typeof value !== 'number' || !isFinite(value) || value <= 0) {
+        return fallback;
+      }
+      return Math.max(value, min);
+    }
+
+    wobble(base, amount = 0.8) {
+      return base + (Math.random() - 0.5) * amount;
+    }
+
+    createVerticalBracket(height) {
+      const safeHeight = this.validateDimension(height, 8, 50);
+      const topY = 4;
+      const bottomY = safeHeight - 4;
+      const x = 26;
+      const hookLength = 18;
+
+      return [
+        `M ${x} ${this.wobble(topY)}`,
+        `C ${this.wobble(x - hookLength * 0.3)} ${this.wobble(topY + 0.3)}, ${this.wobble(x - hookLength * 0.7)} ${this.wobble(topY - 0.2)}, ${this.wobble(x - hookLength)} ${this.wobble(topY + 0.4)}`,
+        `M ${this.wobble(x - 1)} ${this.wobble(topY + 2)}`,
+        `C ${this.wobble(x - 1.8)} ${this.wobble(topY + (bottomY - topY) * 0.2)}, ${this.wobble(x - 0.5)} ${this.wobble(topY + (bottomY - topY) * 0.5)}, ${this.wobble(x - 1)} ${this.wobble(bottomY - 2)}`,
+        `M ${this.wobble(x - hookLength)} ${this.wobble(bottomY - 0.4)}`,
+        `C ${this.wobble(x - hookLength * 0.7)} ${this.wobble(bottomY + 0.2)}, ${this.wobble(x - hookLength * 0.3)} ${this.wobble(bottomY - 0.3)}, ${x} ${this.wobble(bottomY)}`
+      ].join(' ');
+    }
+
+    createHorizontalBracket(width) {
+      const safeWidth = this.validateDimension(width, 8, 100);
+      const leftX = 4;
+      const rightX = safeWidth - 4;
+      const y = 12;
+      const hookLength = 14;
+
+      return [
+        `M ${this.wobble(leftX)} ${this.wobble(y)}`,
+        `C ${this.wobble(leftX - 0.3)} ${this.wobble(y - hookLength * 0.3)}, ${this.wobble(leftX + 0.2)} ${this.wobble(y - hookLength * 0.7)}, ${this.wobble(leftX - 0.4)} ${this.wobble(y - hookLength)}`,
+        `M ${this.wobble(leftX + 2)} ${this.wobble(y - 1)}`,
+        `C ${this.wobble(leftX + (rightX - leftX) * 0.2)} ${this.wobble(y - 1.8)}, ${this.wobble(leftX + (rightX - leftX) * 0.5)} ${this.wobble(y - 0.5)}, ${this.wobble(rightX - 2)} ${this.wobble(y - 1)}`,
+        `M ${this.wobble(rightX + 0.4)} ${this.wobble(y - hookLength)}`,
+        `C ${this.wobble(rightX - 0.2)} ${this.wobble(y - hookLength * 0.7)}, ${this.wobble(rightX + 0.3)} ${this.wobble(y - hookLength * 0.3)}, ${rightX} ${this.wobble(y)}`
+      ].join(' ');
+    }
+
+    shouldUseMobileLayout() {
+      const textEl = this.element.querySelector('.annotation-text');
+      const comment = this.element.querySelector('.annotation-comment');
+
+      if (!textEl) return false;
+
+      const isMobile = window.innerWidth <= this.config.mobileBreakpoint;
+      if (isMobile) return true;
+
+      if (!comment) return false;
+
+      const textRect = textEl.getBoundingClientRect();
+      const bracketWidth = 44;
+      const totalRightSpace = bracketWidth + 14 + 260;
+      const availableSpace =
+        window.innerWidth - (textRect.right + this.config.horizontalSpacing);
+
+      return availableSpace < totalRightSpace;
+    }
+
+    updateLayout() {
+      const textEl = this.element.querySelector('.annotation-text');
+      const svg = this.element.querySelector('.annotation-bracket');
+      const path = this.element.querySelector('.annotation-path');
+      const comment = this.element.querySelector('.annotation-comment');
+
+      if (!textEl || !svg || !path) return;
+
+      const textRect = textEl.getBoundingClientRect();
+      const useMobileLayout = this.shouldUseMobileLayout();
+
+      this.element.classList.toggle('mobile-layout', useMobileLayout);
+
+      let pathData, viewBox;
+
+      if (useMobileLayout) {
+        const bracketWidth = Math.max(textRect.width + 8, textRect.width * 1.1);
+        pathData = this.createHorizontalBracket(bracketWidth);
+        viewBox = `0 0 ${bracketWidth} 28`;
+      } else {
+        const bracketHeight = textRect.height + 32;
+        pathData = this.createVerticalBracket(bracketHeight);
+        viewBox = `-14 0 58 ${bracketHeight + 4}`;
+
+        // check if the comment should be flipped to avoid overflow
+        if (comment) {
+          const commentRect = comment.getBoundingClientRect();
+          const wouldOverflow = commentRect.right > window.innerWidth - 16;
+          comment.classList.toggle('flip-left', wouldOverflow);
+        }
+      }
+
+      svg.setAttribute('viewBox', viewBox);
+      path.setAttribute('d', pathData);
+
+      this.setupAnimation(path, useMobileLayout);
+    }
+
+    setupAnimation(path, useMobileLayout) {
+      if (this.prefersReducedMotion || this.config.disableAnimation) {
+        return;
+      }
+
+      let pathLength;
+      try {
+        pathLength = path.getTotalLength();
+      } catch (error) {
+        console.warn('Could not calculate path length for animation:', error.message);
+        return;
+      }
+
+      if (pathLength <= 0) {
+        return;
+      }
+
+      path.style.strokeDasharray = `${pathLength}`;
+      path.style.strokeDashoffset = `${pathLength}`;
+      path.style.setProperty('--path-length', `${pathLength}`);
+
+      if (this.animationFrame) {
+        cancelAnimationFrame(this.animationFrame);
+      }
+
+      this.animationFrame = requestAnimationFrame(() => {
+        const duration = Math.max(300, pathLength * (useMobileLayout ? 8 : 12));
+        path.style.animation = `drawBracket ${duration}ms ease-out forwards`;
+        this.animationFrame = null;
+      });
+    }
+
+    init() {
+      this.updateLayout();
+
+      if (typeof ResizeObserver !== 'undefined') {
+        this.resizeObserver = new ResizeObserver(() => {
+          this.updateLayout();
+        });
+        this.resizeObserver.observe(this.element);
+        this.resizeObserver.observe(document.body);
+      } else {
+        // fallback for older browsers
+        const { signal } = this.abortController;
+        let resizeTimeout;
+        const handleResize = () => {
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(() => this.updateLayout(), 200);
+        };
+        window.addEventListener('resize', handleResize, { signal });
+      }
+    }
+
+    destroy() {
+      this.abortController.abort();
+
+      if (this.resizeObserver) {
+        this.resizeObserver.disconnect();
+        this.resizeObserver = null;
+      }
+
+      if (this.animationFrame) {
+        cancelAnimationFrame(this.animationFrame);
+        this.animationFrame = null;
+      }
+    }
+  }
+
+  const manager = new AnnotationManager(annotationId, {
+    animationDuration,
+    commentDelay,
+    mobileBreakpoint,
+    disableAnimation,
+    verticalSpacing,
+    horizontalSpacing
+  });
+
+  document.addEventListener('astro:before-preparation', () => {
+    if (manager) {
+      manager.destroy();
+    }
+  });
+</script>

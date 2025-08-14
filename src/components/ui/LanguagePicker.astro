@@ -1,0 +1,53 @@
+---
+import { getLangFromUrl, getLanguageHref } from '@/i18n/utils';
+import { i18nConfig } from '@/i18n/config';
+
+interface Props {
+  class?: string;
+}
+const { class: extra = '' } = Astro.props as Props;
+
+const currentLang = getLangFromUrl(Astro.url);
+const currentPath = Astro.url.pathname;
+const segments = currentPath.split('/').filter(Boolean);
+const currentRoute = segments.length > 1 ? segments[1] : '';
+
+const languageOptions = await Promise.all(
+  Object.entries(i18nConfig.languages).map(async ([langCode, langConfig]) => {
+    const href = await getLanguageHref(langCode, currentPath, currentRoute);
+    return {
+      code: langCode,
+      label: langConfig.name,
+      href,
+      isActive: langCode === currentLang
+    };
+  })
+);
+---
+
+<nav class={`language-switcher ${extra}`.trim()} aria-label='Language switcher'>
+  <ul
+    class='m-0 flex list-none items-center gap-2 rounded-md bg-white/90 p-0 px-1 py-1 text-xs font-medium shadow-sm backdrop-blur-sm sm:bg-transparent sm:px-0 sm:py-0 sm:shadow-none dark:bg-gray-900/90 sm:dark:bg-transparent'
+  >
+    {
+      languageOptions.map(({ code, href, isActive }) => (
+        <li>
+          {isActive ? (
+            <span class='text-text-primary rounded bg-black/5 px-2 py-1 dark:bg-white/10'>
+              {code.toUpperCase()}
+            </span>
+          ) : (
+            <a
+              href={href}
+              hreflang={code}
+              lang={code}
+              class='text-text-secondary hover:text-text-primary rounded px-2 py-1 underline-offset-4 transition-colors focus-visible:ring-2 focus-visible:ring-black/30 dark:focus-visible:ring-white/30'
+            >
+              {code.toUpperCase()}
+            </a>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+</nav>
