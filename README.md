@@ -93,7 +93,7 @@ For video content:
 Configuration:
 
 - `aspectRatio` - Prevents layout shift during loading ('16/9', '4/3', 'square', etc.)
-- `priority` - Set to `true` for above-the-fold content that should load immediately.
+- `priority` - Set to `true` for above-the-fold content that should load immediately
 - Standard HTML video attributes (`controls`, `loop`, `muted`, `autoplay`) are supported
 
 ### Callout
