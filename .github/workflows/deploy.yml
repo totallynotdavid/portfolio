@@ -2,7 +2,15 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [master]
+    branches:
+      - 'master'
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'astro.config.ts'
+      - 'tailwind.config.ts'
+      - 'tsconfig.json'
   workflow_dispatch:
 
 permissions:
