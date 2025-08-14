@@ -7,7 +7,7 @@ view the live site at [totallynotdavid.github.io](https://totallynotdavid.github
 The site is a place for my writing and a playground for building things I find
 interesting.
 
-## Getting Started
+## Getting started
 
 To run the project locally, you'll need Bun. If you don't have Bun installed, grab it from
 [bun.sh](https://bun.sh/) or use npm/pnpm/yarn as alternatives.
